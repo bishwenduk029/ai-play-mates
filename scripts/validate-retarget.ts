@@ -13,7 +13,7 @@ import { VRMLoaderPlugin } from "@pixiv/three-vrm";
 import { MIXAMO_TO_VRM, retargetClipsToVrm, normalizeBoneName } from "../src/lib/three/vrm-retarget.ts";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const vrmPath = path.join(root, "public/characters/avatar/model.vrm");
+const vrmPath = path.join(root, "public/characters/samba/model.vrm");
 const fbxPath = process.argv[2] ?? "/tmp/spac-test/samba.fbx";
 
 // --- Load FBX (synchronous parse) ---

@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { Scene } from "@/components/Scene";
 import { ControlPanel } from "@/components/ControlPanel";
 import { LiveKitSession } from "@/components/LiveKitSession";
 import { SignOutButton } from "@/components/SignOutButton";
+import { Button } from "@/components/ui/button";
 
 export default async function PlayPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -31,6 +33,11 @@ export default async function PlayPage() {
       </div>
 
       <div className="absolute right-4 top-4 flex items-center gap-3 sm:right-6 sm:top-6">
+        <Link href="/upload">
+          <Button variant="ghost" size="sm" className="pointer-events-auto">
+            Upload
+          </Button>
+        </Link>
         <SignOutButton />
         <LiveKitSession />
       </div>

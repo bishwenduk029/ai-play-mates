@@ -7,7 +7,6 @@ import {
   fetchAllCharacters,
   type CharacterManifest,
 } from "@/lib/characters";
-import { CharacterUploader } from "./CharacterUploader";
 
 /**
  * Dev control panel.
@@ -18,7 +17,6 @@ export function ControlPanel() {
   const state = useActionState();
   const [characters, setCharacters] = useState<CharacterManifest[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [showUploader, setShowUploader] = useState(false);
   const character = controller.getCharacter();
   const sessionLive = controller.isSessionLive();
 
@@ -159,23 +157,14 @@ export function ControlPanel() {
         <code className="text-muted-foreground">{`SPAC.walkLeft()`}</code>
       </p>
 
-      <button
-        onClick={() => setShowUploader((v) => !v)}
-        disabled={sessionLive}
-        className="rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted/80 disabled:opacity-40"
-      >
-        {showUploader ? "Close uploader" : "+ Upload character"}
-      </button>
-
-      {showUploader && (
-        <CharacterUploader
-          onCreated={(c) => {
-            loadCharacters();
-            // Auto-select the freshly created character so it's playable.
-            controller.setCharacter(c);
-          }}
-        />
-      )}
+      <a href="/upload">
+        <button
+          disabled={sessionLive}
+          className="pointer-events-auto rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted/80 disabled:opacity-40"
+        >
+          + Upload character
+        </button>
+      </a>
     </div>
   );
 }

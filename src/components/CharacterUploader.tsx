@@ -7,6 +7,22 @@ import {
 } from "@/lib/glb-browser";
 import { inspectFbxBrowser } from "@/lib/fbx-browser";
 import type { CharacterManifest } from "@/lib/characters";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
 type UploadModelType = "glb" | "vrm" | "vrm-fbx";
 type Source = "file" | "url";
@@ -38,14 +54,16 @@ interface ClipChoice {
  * the figure renderers and the Python agent's tool set, so the kid's voice can
  * drive exactly the clips the uploaded body can play.
  *
- * Thin UI adapter over the inspector modules (glb-browser, fbx-browser) and
- * the /api/characters/create route.
+ * Pure shadcn black/white theme — no custom colors. Thin UI adapter over the
+ * inspector modules (glb-browser, fbx-browser) and the create route.
  */
 export function CharacterUploader({
   onCreated,
+  className,
+  ...props
 }: {
   onCreated?: (character: CharacterManifest) => void;
-}) {
+} & React.ComponentProps<"div">) {
   const [source, setSource] = useState<Source>("file");
   const [modelType, setModelType] = useState<UploadModelType>("glb");
   const [modelFile, setModelFile] = useState<File | null>(null);
@@ -234,168 +252,195 @@ export function CharacterUploader({
       setError(data.error ?? `create failed (${res.status})`);
       return;
     }
-    setOk(`Created "${data.character.label}". Pick it below to play.`);
+    setOk(`Created "${data.character.label}". Pick it on the play screen to use it.`);
     onCreated?.(data.character);
     reset();
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-3">
-      <p className="text-[10px] uppercase tracking-widest text-white/40">
-        Upload character
-      </p>
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Upload a character</CardTitle>
+          <CardDescription>
+            Bring your own rigged model. The manifest&apos;s actions become the
+            agent&apos;s tools — so the voice can drive exactly what the body can play.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FieldGroup>
+            {/* Source toggle */}
+            <Field orientation="horizontal">
+              <FieldLabel>Source</FieldLabel>
+              <div className="flex gap-2">
+                {(["file", "url"] as const).map((s) => (
+                  <Button
+                    key={s}
+                    type="button"
+                    variant={source === s ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setSource(s);
+                      resetClips();
+                    }}
+                  >
+                    {s === "file" ? "File" : "Remote URL"}
+                  </Button>
+                ))}
+              </div>
+            </Field>
 
-      {/* Source toggle */}
-      <div className="flex gap-1">
-        {(["file", "url"] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => {
-              setSource(s);
-              resetClips();
-            }}
-            className={[
-              "rounded-md px-2 py-1 text-[11px] font-medium transition",
-              source === s ? "bg-white/20 text-white" : "bg-white/5 text-white/60 hover:bg-white/10",
-            ].join(" ")}
-          >
-            {s === "file" ? "File" : "Remote URL"}
-          </button>
-        ))}
-      </div>
+            {/* Model type */}
+            <Field orientation="horizontal">
+              <FieldLabel>Model type</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {(["glb", "vrm", "vrm-fbx"] as const).map((t) => (
+                  <Button
+                    key={t}
+                    type="button"
+                    variant={modelType === t ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setModelType(t);
+                      resetClips();
+                      setFbxFile(null);
+                      setFbxUrl("");
+                      if (fbxInput.current) fbxInput.current.value = "";
+                    }}
+                  >
+                    {t === "vrm-fbx" ? "VRM + FBX" : t.toUpperCase()}
+                  </Button>
+                ))}
+              </div>
+            </Field>
 
-      {/* Model type */}
-      <div className="flex flex-wrap gap-1">
-        {(["glb", "vrm", "vrm-fbx"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => {
-              setModelType(t);
-              resetClips();
-              setFbxFile(null);
-              setFbxUrl("");
-              if (fbxInput.current) fbxInput.current.value = "";
-            }}
-            className={[
-              "rounded-md px-2 py-1 text-[11px] font-medium transition",
-              modelType === t
-                ? "bg-sky-400 text-slate-900"
-                : "bg-white/5 text-white/70 hover:bg-white/10",
-            ].join(" ")}
-          >
-            {t === "vrm-fbx" ? "VRM + FBX" : t.toUpperCase()}
-          </button>
-        ))}
-      </div>
+            {/* Model input — file or URL */}
+            {source === "file" ? (
+              <Field>
+                <FieldLabel htmlFor="model-file">
+                  {modelType === "glb" ? "GLB file" : "VRM file"}
+                </FieldLabel>
+                <Input
+                  ref={modelInput}
+                  id="model-file"
+                  type="file"
+                  accept={modelType === "glb" ? ".glb,model/gltf-binary" : ".vrm"}
+                  onChange={(e) => onModelPicked(e.target.files?.[0] ?? null)}
+                />
+              </Field>
+            ) : (
+              <Field>
+                <FieldLabel htmlFor="model-url">
+                  {modelType === "glb" ? "GLB URL" : "VRM URL"}
+                </FieldLabel>
+                <Input
+                  id="model-url"
+                  type="url"
+                  placeholder="https://cdn.example.com/hero.glb"
+                  value={modelUrl}
+                  onChange={(e) => setModelUrl(e.target.value)}
+                  onBlur={onModelUrlEntered}
+                />
+                <FieldDescription>
+                  The manifest stores the URL directly — the runtime streams the
+                  model from there (host must allow CORS). No local copy.
+                </FieldDescription>
+              </Field>
+            )}
 
-      {/* Model input — file or URL */}
-      <div className="flex flex-col gap-1 text-[11px] text-white/60">
-        {source === "file" ? (
-          <label className="flex items-center gap-2">
-            <span className="w-14 shrink-0">{modelType === "glb" ? "GLB" : "VRM"}</span>
-            <input
-              ref={modelInput}
-              type="file"
-              accept={modelType === "glb" ? ".glb,model/gltf-binary" : ".vrm"}
-              onChange={(e) => onModelPicked(e.target.files?.[0] ?? null)}
-              className="text-[10px] text-white/50 file:mr-2 file:rounded file:border-0 file:bg-white/10 file:px-2 file:py-0.5 file:text-[10px] file:text-white/80"
-            />
-          </label>
-        ) : (
-          <label className="flex items-center gap-2">
-            <span className="w-14 shrink-0">{modelType === "glb" ? "GLB" : "VRM"} URL</span>
-            <input
-              value={modelUrl}
-              onChange={(e) => setModelUrl(e.target.value)}
-              onBlur={onModelUrlEntered}
-              placeholder="https://cdn.example.com/hero.glb"
-              className="flex-1 rounded-md bg-white/5 px-2 py-1 text-[11px] text-white/80 outline-none placeholder:text-white/30"
-            />
-          </label>
-        )}
+            {/* FBX input (vrm-fbx only) */}
+            {modelType === "vrm-fbx" &&
+              (source === "file" ? (
+                <Field>
+                  <FieldLabel htmlFor="fbx-file">FBX animation file</FieldLabel>
+                  <Input
+                    ref={fbxInput}
+                    id="fbx-file"
+                    type="file"
+                    accept=".fbx"
+                    onChange={(e) => onFbxPicked(e.target.files?.[0] ?? null)}
+                  />
+                </Field>
+              ) : (
+                <Field>
+                  <FieldLabel htmlFor="fbx-url">FBX animation URL</FieldLabel>
+                  <Input
+                    id="fbx-url"
+                    type="url"
+                    placeholder="https://cdn.example.com/animations.fbx"
+                    value={fbxUrl}
+                    onChange={(e) => setFbxUrl(e.target.value)}
+                    onBlur={onFbxUrlEntered}
+                  />
+                </Field>
+              ))}
 
-        {modelType === "vrm-fbx" &&
-          (source === "file" ? (
-            <label className="flex items-center gap-2">
-              <span className="w-14 shrink-0">FBX</span>
-              <input
-                ref={fbxInput}
-                type="file"
-                accept=".fbx"
-                onChange={(e) => onFbxPicked(e.target.files?.[0] ?? null)}
-                className="text-[10px] text-white/50 file:mr-2 file:rounded file:border-0 file:bg-white/10 file:px-2 file:py-0.5 file:text-[10px] file:text-white/80"
+            {/* id + label + baseY */}
+            <Field orientation="horizontal" className="grid grid-cols-2 gap-4">
+              <Field>
+                <FieldLabel htmlFor="char-id">id</FieldLabel>
+                <Input
+                  id="char-id"
+                  placeholder="hero"
+                  value={id}
+                  onChange={(e) => setId(e.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="char-label">Label</FieldLabel>
+                <Input
+                  id="char-label"
+                  placeholder="Hero"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                />
+              </Field>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="char-basey">baseY</FieldLabel>
+              <Input
+                id="char-basey"
+                placeholder="0"
+                value={baseY}
+                onChange={(e) => setBaseY(e.target.value)}
               />
-            </label>
-          ) : (
-            <label className="flex items-center gap-2">
-              <span className="w-14 shrink-0">FBX URL</span>
-              <input
-                value={fbxUrl}
-                onChange={(e) => setFbxUrl(e.target.value)}
-                onBlur={onFbxUrlEntered}
-                placeholder="https://cdn.example.com/animations.fbx"
-                className="flex-1 rounded-md bg-white/5 px-2 py-1 text-[11px] text-white/80 outline-none placeholder:text-white/30"
-              />
-            </label>
-          ))}
-      </div>
+              <FieldDescription>Root Y offset so feet rest on the ground.</FieldDescription>
+            </Field>
 
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-          placeholder="id (e.g. hero)"
-          className="rounded-md bg-white/5 px-2 py-1 text-[11px] text-white/80 outline-none placeholder:text-white/30"
-        />
-        <input
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          placeholder="label (e.g. Hero)"
-          className="rounded-md bg-white/5 px-2 py-1 text-[11px] text-white/80 outline-none placeholder:text-white/30"
-        />
-      </div>
-      <input
-        value={baseY}
-        onChange={(e) => setBaseY(e.target.value)}
-        placeholder="baseY (default 0)"
-        className="rounded-md bg-white/5 px-2 py-1 text-[11px] text-white/80 outline-none placeholder:text-white/30"
-      />
+            {/* Clips checklist */}
+            {clips.length > 0 && (
+              <Field>
+                <FieldLabel>Clips</FieldLabel>
+                <div className="flex flex-col gap-1 rounded-lg border bg-muted/30 p-3">
+                  <FieldDescription className="mb-1">
+                    {clips.filter((c) => c.selected).length}/{clips.length} selected
+                  </FieldDescription>
+                  {clips.map((c, i) => (
+                    <label key={i} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={c.selected}
+                        onChange={() => toggleClip(i)}
+                        className="size-4"
+                      />
+                      <span>{c.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </Field>
+            )}
 
-      {clips.length > 0 && (
-        <div className="flex flex-col gap-1 rounded-md bg-black/20 p-2">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">
-            Clips ({clips.filter((c) => c.selected).length}/{clips.length})
-          </p>
-          {clips.map((c, i) => (
-            <label key={i} className="flex items-center gap-2 text-[11px] text-white/70">
-              <input
-                type="checkbox"
-                checked={c.selected}
-                onChange={() => toggleClip(i)}
-                className="h-3 w-3"
-              />
-              <span>{c.label}</span>
-            </label>
-          ))}
-        </div>
-      )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            {ok && <p className="text-sm text-emerald-600 dark:text-emerald-400">{ok}</p>}
 
-      {source === "url" && (
-        <p className="text-[9px] leading-tight text-white/30">
-          The manifest stores the URL directly — the runtime streams the model
-          from there (host must allow CORS). No local copy.
-        </p>
-      )}
-      {error && <p className="text-[10px] text-rose-300/90">{error}</p>}
-      {ok && <p className="text-[10px] text-emerald-300/90">{ok}</p>}
-
-      <button
-        onClick={submit}
-        disabled={busy}
-        className="rounded-md bg-emerald-400 px-3 py-1.5 text-[11px] font-medium text-slate-900 transition hover:bg-emerald-300 disabled:opacity-50"
-      >
-        {busy ? "Creating…" : "Create character"}
-      </button>
+            <Field>
+              <Button type="button" disabled={busy} onClick={submit}>
+                {busy ? "Creating…" : "Create character"}
+              </Button>
+            </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
     </div>
   );
 }
