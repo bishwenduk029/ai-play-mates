@@ -1,0 +1,63 @@
+# Gitleaks configuration — extends the default ruleset with project-specific
+# patterns. The default ruleset already covers: AWS, GCP, Azure, GitHub tokens,
+# private keys, database URLs, Stripe keys, Slack tokens, and 100+ more.
+# https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
+
+title = "S-PAC secret scanning"
+
+[extend]
+# Inherit all default rules (don't replace them).
+useDefault = true
+
+# --- Project-specific rules -----------------------------------------------
+
+# Better Auth secret (32+ char base64)
+[[rules]]
+id = "better-auth-secret"
+description = "Better Auth secret"
+regex = '''BETTER_AUTH_SECRET\s*=\s*['"]?[A-Za-z0-9+/=]{32,}['"]?'''
+tags = ["key", "better-auth"]
+
+# LiveKit API secret (32+ char hex)
+[[rules]]
+id = "livekit-api-secret"
+description = "LiveKit API secret"
+regex = '''LIVEKIT_API_SECRET\s*=\s*['"]?[A-Za-z0-9]{32,}['"]?'''
+tags = ["key", "livekit"]
+
+# Google API key (AIza...)
+[[rules]]
+id = "google-api-key"
+description = "Google API key"
+regex = '''GOOGLE_API_KEY\s*=\s*['"]?AIza[0-9A-Za-z_\-]{35}['"]?'''
+tags = ["key", "google"]
+
+# LiveKit URL (wss://...)
+[[rules]]
+id = "livekit-url"
+description = "LiveKit server URL"
+regex = '''LIVEKIT_URL\s*=\s*['"]?wss://[^\s'"]+['"]?'''
+tags = ["url", "livekit"]
+
+# --- Allowlist (known-safe paths) -----------------------------------------
+# These are scanned but findings are ignored — examples, docs, etc.
+[allowlist]
+description = "Allowlisted paths"
+paths = [
+  '''\.env\.local\.example$''',
+  '''\.env\.example$''',
+  '''README\.md''',
+  '''ARCHITECTURE\.md''',
+  '''node_modules/.*''',
+  '''\.next/.*''',
+  '''\.git/.*''',
+  '''\.pnpm/.*''',
+  '''\.agents/skills/.*''',
+  '''pnpm-lock\.yaml''',
+  '''uv\.lock''',
+  '''sqlite\.db''',
+  '''\.glb$''',
+  '''\.vrm$''',
+]
+# Allowlisted commit SHAs (if a historical commit has a known false positive)
+commits = []

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Pre-commit hook: scan staged files for secrets using gitleaks.
+# Blocks the commit if any secret is detected.
+set -e
+
+echo "🔍 Scanning staged files for secrets (gitleaks)..."
+
+# Scan only the staged diff — fast, no full-repo scan.
+if ! gitleaks git --pre-commit --staged --redact --verbose; then
+  echo ""
+  echo "❌ COMMIT BLOCKED: Potential secrets detected above."
+  echo "   Review the findings. If false positive, use:"
+  echo "   gitleaks detect --source . --no-git --report-format json --report-path /tmp/leaks.json"
+  echo "   To bypass (DANGEROUS, only for known false positives):"
+  echo "   git commit --no-verify"
+  echo ""
+  exit 1
+fi
+
+echo "✅ No secrets detected — proceeding with commit."
