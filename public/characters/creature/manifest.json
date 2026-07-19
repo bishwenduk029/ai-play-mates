@@ -1,0 +1,21 @@
+{
+  "id": "creature",
+  "label": "Creature",
+  "description": "A rigged creature model with baked animation clips.",
+  "modelType": "glb",
+  "modelPath": "/characters/creature/model.glb",
+  "baseY": 0,
+  "actions": [
+    { "name": "idle", "label": "Idle", "description": "Calm resting pose.", "durationMs": null, "clip": "Idle" },
+    { "name": "attack", "label": "Attack", "description": "Lunge forward and attack.", "durationMs": 1200, "clip": "Attack" },
+    { "name": "roar", "label": "Roar", "description": "Roar loudly and dramatically.", "durationMs": 2000, "clip": "Roar" },
+    { "name": "swim", "label": "Swim", "description": "Swimming motion (rhythmic full body).", "durationMs": null, "clip": "Swim" },
+    { "name": "tailAttack", "label": "Tail Attack", "description": "Swing the tail.", "durationMs": 1200, "clip": "Tail Attack" },
+    { "name": "hit", "label": "Hit", "description": "Recoil as if hit.", "durationMs": 800, "clip": "Hit" },
+    { "name": "death", "label": "Death", "description": "Fall down dramatically.", "durationMs": null, "clip": "Death" },
+    { "name": "walkForward", "label": "▲", "description": "Walk one step toward the kid.", "durationMs": 1200, "clip": "Walk" },
+    { "name": "walkBack", "label": "▼", "description": "Walk one step away from the kid.", "durationMs": 1200, "clip": "Walk" },
+    { "name": "walkLeft", "label": "◀", "description": "Walk one step to the kid's left.", "durationMs": 1200, "clip": "Walk" },
+    { "name": "walkRight", "label": "▶", "description": "Walk one step to the kid's right.", "durationMs": 1200, "clip": "Walk" }
+  ]
+}

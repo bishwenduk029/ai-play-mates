@@ -1,0 +1,20 @@
+{
+  "id": "bunny",
+  "label": "Bunny",
+  "description": "Cute primitive-built bunny with procedural motions.",
+  "modelType": "primitive",
+  "modelPath": null,
+  "baseY": 0.8,
+  "actions": [
+    { "name": "idle", "label": "Idle", "description": "Calm resting pose with ear twitch.", "durationMs": null },
+    { "name": "jump", "label": "Jump", "description": "Hop up and land softly.", "durationMs": 900 },
+    { "name": "wave", "label": "Wave", "description": "Raise a paw and wave hello.", "durationMs": 2000 },
+    { "name": "spin", "label": "Spin", "description": "Turn a full circle.", "durationMs": 1200 },
+    { "name": "dance", "label": "Dance", "description": "Dance in place to a beat.", "durationMs": null },
+    { "name": "play", "label": "Play", "description": "Bounce around excitedly.", "durationMs": null },
+    { "name": "walkForward", "label": "▲", "description": "Walk one step toward the kid.", "durationMs": 1200 },
+    { "name": "walkBack", "label": "▼", "description": "Walk one step away from the kid.", "durationMs": 1200 },
+    { "name": "walkLeft", "label": "◀", "description": "Walk one step to the kid's left.", "durationMs": 1200 },
+    { "name": "walkRight", "label": "▶", "description": "Walk one step to the kid's right.", "durationMs": 1200 }
+  ]
+}

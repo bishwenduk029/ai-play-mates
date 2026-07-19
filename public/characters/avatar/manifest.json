@@ -1,0 +1,15 @@
+{
+  "id": "avatar",
+  "label": "Avatar",
+  "description": "Cartoonish VRM humanoid (Polydancer) with procedural locomotion and facial lipsync.",
+  "modelType": "vrm",
+  "modelPath": "/characters/avatar/model.vrm",
+  "baseY": 0,
+  "actions": [
+    { "name": "idle", "label": "Idle", "description": "Calm resting pose with gentle breathing.", "durationMs": null },
+    { "name": "walkForward", "label": "▲", "description": "Walk one step toward the kid.", "durationMs": 1200 },
+    { "name": "walkBack", "label": "▼", "description": "Walk one step away from the kid.", "durationMs": 1200 },
+    { "name": "walkLeft", "label": "◀", "description": "Walk one step to the kid's left.", "durationMs": 1200 },
+    { "name": "walkRight", "label": "▶", "description": "Walk one step to the kid's right.", "durationMs": 1200 }
+  ]
+}

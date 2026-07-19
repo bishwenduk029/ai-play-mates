@@ -1,0 +1,52 @@
+"use client";
+
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, ContactShadows } from "@react-three/drei";
+import { Figure } from "./Figure";
+
+export function Scene() {
+  return (
+    <Canvas
+      shadows
+      camera={{ position: [3, 2.5, 4], fov: 45 }}
+      className="!absolute inset-0"
+    >
+      <color attach="background" args={["#0f172a"]} />
+      <fog attach="fog" args={["#0f172a", 8, 18]} />
+
+      <ambientLight intensity={0.5} />
+      <directionalLight
+        position={[4, 6, 3]}
+        intensity={1.2}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+      />
+      <directionalLight position={[-4, 2, -3]} intensity={0.3} color="#60a5fa" />
+
+      <Figure />
+
+      <ContactShadows
+        position={[0, 0.01, 0]}
+        opacity={0.5}
+        scale={10}
+        blur={2.4}
+        far={4}
+      />
+
+      {/* ground */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <circleGeometry args={[6, 64]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.9} />
+      </mesh>
+
+      <OrbitControls
+        enablePan={false}
+        minDistance={3}
+        maxDistance={8}
+        minPolarAngle={Math.PI / 6}
+        maxPolarAngle={Math.PI / 2 + 0.1}
+        target={[0, 1, 0]}
+      />
+    </Canvas>
+  );
+}
