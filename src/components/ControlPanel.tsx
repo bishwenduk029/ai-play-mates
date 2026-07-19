@@ -156,8 +156,8 @@ export function ControlPanel() {
 
       <p className="text-[11px] leading-relaxed text-muted-foreground">
         Console:{" "}
-        <code className="text-muted-foreground">SPAC.trigger("attack")</code>,{" "}
-        <code className="text-muted-foreground">SPAC.walkLeft()</code>
+        <code className="text-muted-foreground">{`SPAC.trigger("attack")`}</code>,{" "}
+        <code className="text-muted-foreground">{`SPAC.walkLeft()`}</code>
       </p>
     </div>
   );
