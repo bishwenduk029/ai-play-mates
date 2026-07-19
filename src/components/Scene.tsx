@@ -1,8 +1,15 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, ContactShadows } from "@react-three/drei";
+import { OrbitControls, ContactShadows, useTexture } from "@react-three/drei";
 import { Figure } from "./Figure";
+
+/** Sets the forest image as the scene background. */
+function SceneBackground() {
+  const texture = useTexture("/scene-bg.jpg");
+  texture.colorSpace = "srgb";
+  return <primitive object={texture} attach="background" />;
+}
 
 export function Scene() {
   return (
@@ -11,10 +18,9 @@ export function Scene() {
       camera={{ position: [3, 2.5, 4], fov: 45 }}
       className="!absolute inset-0"
     >
-      <color attach="background" args={["#0f172a"]} />
-      <fog attach="fog" args={["#0f172a", 8, 18]} />
+      <SceneBackground />
 
-      <ambientLight intensity={0.5} />
+      <ambientLight intensity={0.6} />
       <directionalLight
         position={[4, 6, 3]}
         intensity={1.2}
@@ -36,7 +42,7 @@ export function Scene() {
       {/* ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <circleGeometry args={[6, 64]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.9} />
+        <meshStandardMaterial color="#3a5a40" roughness={0.9} />
       </mesh>
 
       <OrbitControls
