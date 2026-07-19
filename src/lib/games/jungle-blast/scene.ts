@@ -1,7 +1,7 @@
 // Jungle Blast — a Phaser 4 arcade game.
 //
 // A hero auto-walks through a jungle. Wild animals charge in from the right.
-// The kid PUNCHES (hand above head, detected by MediaPipe) to blast the
+// The kid KICKS (foot up) and JUMPS (hips rise), detected by MediaPipe,
 // nearest animal into thin air. Run (lean left/right) to dodge.
 //
 // Pure Phaser 4 scene — no React. The React host (JungleBlastGame.tsx) creates
@@ -67,7 +67,7 @@ export class JungleBlastScene extends Phaser.Scene {
   private scoreText!: Phaser.GameObjects.Text;
   private livesText!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
-  private gameOverText?: Phaser.GameObjects.Text;
+  private gameOverGroup: Phaser.GameObjects.GameObject[] = [];
 
   private score = 0;
   private lives = 3;
@@ -81,6 +81,26 @@ export class JungleBlastScene extends Phaser.Scene {
 
   constructor() {
     super("jungle-blast");
+  }
+
+  /**
+   * Runs on every start AND restart (Phaser lifecycle). Reset ALL mutable
+   * gameplay state here — NOT in the constructor (runs once) and NOT only in
+   * a shutdown handler (fires after create, racing the restart).
+   */
+  init() {
+    this.animals = [];
+    this.trees = [];
+    this.gameOverGroup = [];
+    this.score = 0;
+    this.lives = 3;
+    this.nextSpawnAt = 0;
+    this.elapsed = 0;
+    this.gameOver = false;
+    this.kickFlash = 0;
+    this.heroTargetX = HERO_X;
+    this.heroJumpY = 0;
+    this.heroJumping = false;
   }
 
   preload() {
@@ -147,7 +167,7 @@ export class JungleBlastScene extends Phaser.Scene {
       .text(16, 42, "Lives: ❤❤❤", { fontSize: "18px", color: "#f8fafc" })
       .setDepth(20);
     this.hintText = this.add
-      .text(width / 2, height - 24, "PUNCH to blast!  ←/→ or lean to run", {
+      .text(width / 2, height - 24, "KICK to blast!  JUMP to ground-pound!  ←/→ or lean to run", {
         fontSize: "14px",
         color: "#94a3b8",
       })
@@ -264,7 +284,7 @@ export class JungleBlastScene extends Phaser.Scene {
     this.animals = this.animals.filter((a) => a.alive);
   }
 
-  private doPunch() {
+  private doKick() {
     // Blast the nearest alive animal to the right of the hero.
     let target: Animal | null = null;
     let bestDist = Infinity;
@@ -277,8 +297,8 @@ export class JungleBlastScene extends Phaser.Scene {
       }
     }
     if (!target) {
-      // Whiff — small dust puff at the hero's hand.
-      this.spawnBurst(HERO_X + 40, GROUND_Y - 40, 0x94a3b8, 6);
+      // Whiff — small dust puff at the hero's foot.
+      this.spawnBurst(HERO_X + 40, GROUND_Y, 0x94a3b8, 6);
       return;
     }
     target.alive = false;
@@ -296,6 +316,50 @@ export class JungleBlastScene extends Phaser.Scene {
     });
     this.score += 10;
     this.scoreText.setText(`Score: ${this.score}`);
+  }
+
+  /**
+   * Ground-pound on jump landing: blast every alive animal within a radius of
+   * the hero. Bigger reward than a kick (clears a crowd) but only reachable
+   * via jump, which has its own cooldown in the pose hook.
+   */
+  private doGroundPound() {
+    const POUND_RADIUS = 220;
+    let hits = 0;
+    // Shockwave ring.
+    const ring = this.add.circle(HERO_X, GROUND_Y, 20, 0xfde047, 0.4);
+    ring.setStrokeStyle(4, 0xfde047);
+    ring.setDepth(12);
+    this.tweens.add({
+      targets: ring,
+      scale: POUND_RADIUS / 20,
+      alpha: 0,
+      duration: 350,
+      ease: "Quad.out",
+      onComplete: () => ring.destroy(),
+    });
+    for (const a of this.animals) {
+      if (!a.alive) continue;
+      if (Math.abs(a.go.x - HERO_X) <= POUND_RADIUS) {
+        a.alive = false;
+        this.spawnBurst(a.go.x, a.go.y - 16, C.blast, 12);
+        this.tweens.add({
+          targets: a.go,
+          y: a.go.y - 160,
+          alpha: 0,
+          scaleX: 1.4,
+          scaleY: 1.4,
+          duration: 400,
+          ease: "Quad.out",
+          onComplete: () => a.go.destroy(),
+        });
+        hits += 1;
+      }
+    }
+    if (hits > 0) {
+      this.score += hits * 15; // crowd-clear bonus
+      this.scoreText.setText(`Score: ${this.score}`);
+    }
   }
 
   private spawnAnimal() {
@@ -351,7 +415,8 @@ export class JungleBlastScene extends Phaser.Scene {
     const cy = GAME_H / 2;
     const overlay = this.add.rectangle(cx, cy, GAME_W, GAME_H, 0x000000, 0.6);
     overlay.setDepth(30);
-    this.gameOverText = this.add
+    this.gameOverGroup.push(overlay);
+    const title = this.add
       .text(cx, cy - 30, "GAME OVER", {
         fontSize: "48px",
         color: "#fde047",
@@ -359,20 +424,21 @@ export class JungleBlastScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setDepth(31);
-    this.add
+    const scoreLabel = this.add
       .text(cx, cy + 20, `Score: ${this.score}`, {
         fontSize: "24px",
         color: "#f8fafc",
       })
       .setOrigin(0.5)
       .setDepth(31);
-    this.add
-      .text(cx, cy + 70, "Press SPACE or tap to play again", {
+    const restartLabel = this.add
+      .text(cx, cy + 70, "Press SPACE / UP or tap to play again", {
         fontSize: "16px",
         color: "#94a3b8",
       })
       .setOrigin(0.5)
       .setDepth(31);
+    this.gameOverGroup.push(title, scoreLabel, restartLabel);
 
     // Restart on space / click.
     this.input.keyboard?.once("keydown-SPACE", () => this.scene.restart());
@@ -410,10 +476,9 @@ export class JungleBlastScene extends Phaser.Scene {
   }
 
   private cleanup() {
-    this.animals = [];
-    this.trees = [];
-    this.gameOverText = undefined;
-    this.heroTargetX = HERO_X;
+    // Destroy game-over overlay objects so they don't persist after restart.
+    for (const go of this.gameOverGroup) go.destroy();
+    this.gameOverGroup = [];
   }
 }
 

@@ -119,7 +119,7 @@ export function DevControlPanel() {
 
       <p className="text-[11px] leading-relaxed text-muted-foreground/60">
         Dev panel — use{" "}
-        <code className="text-foreground">SPAC.trigger("attack")</code> from
+        <code className="text-foreground">{`SPAC.trigger("attack")`}</code> from
         the console.
       </p>
     </div>
