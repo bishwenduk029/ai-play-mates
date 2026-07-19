@@ -56,8 +56,9 @@ next-env.d.ts
 
 # Vercel
 .vercel
-sqlite.db
-drizzle/
+# SQLite local fallback file (NOT the drizzle migrations — those are tracked)
+*.db
+local.db
 
 # AI agent skills / tooling — local only, never commit
 .agents/
