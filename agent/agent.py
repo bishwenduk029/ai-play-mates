@@ -1,4 +1,4 @@
-"""S-PAC vision agent — manifesto-driven.
+"""AI Play Mates vision agent — manifesto-driven.
 
 At session start the agent:
   1. Reads characterId from the job/room metadata (set by /api/token).
@@ -101,7 +101,7 @@ def _build_instructions(manifest: dict[str, Any]) -> str:
     desc = manifest.get("description", "")
     actions = manifest.get("actions", [])
     lines = [
-        f"You are S-PAC, currently embodied as {label}. {desc}",
+        f"You are AI Play Mates, currently embodied as {label}. {desc}",
         "You can see the kid through their webcam and hear them through their microphone.",
         "Your job is to keep a child under 7 entertained by reacting to what they do",
         "and moving your on-screen figure body in response.",

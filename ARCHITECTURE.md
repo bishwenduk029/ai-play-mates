@@ -1,4 +1,4 @@
-# S-PAC — Architecture Summary
+# AI Play Mates — Architecture Summary
 
 > A digital play companion for kids under 7. An AI vision agent (Gemini Live) sees the kid through their webcam and drives an on-screen 3D figure via LiveKit RPC. The figure is data-driven — adding a new character means dropping a GLB + manifest, no code changes.
 

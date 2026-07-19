@@ -18,9 +18,9 @@ export default async function HomePage() {
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <span className="text-xs font-bold">SP</span>
+              <span className="text-xs font-bold">APM</span>
             </div>
-            S-PAC
+            AI Play Mates
           </Link>
           <nav className="flex items-center gap-2">
             {session ? (
@@ -51,10 +51,10 @@ export default async function HomePage() {
           </div>
 
           <h1 className="mb-4 text-5xl font-bold tracking-tight sm:text-6xl">
-            S-PAC
+            AI Play Mates
           </h1>
           <p className="mb-2 text-xl text-muted-foreground">
-            Smart Play AI Companion
+            AI Play Mates for kids
           </p>
           <p className="mb-8 max-w-xl text-base text-muted-foreground">
             An AI companion that sees your child, talks to them, and brings a 3D

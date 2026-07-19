@@ -8,9 +8,9 @@ export default function SignupPage() {
       <div className="flex w-full max-w-sm flex-col gap-6">
         <a href="/" className="flex items-center gap-2 self-center font-medium">
           <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <span className="text-xs font-bold">SP</span>
+            <span className="text-xs font-bold">APM</span>
           </div>
-          S-PAC
+          AI Play Mates
         </a>
         <SignupForm />
       </div>

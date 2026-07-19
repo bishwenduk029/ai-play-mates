@@ -49,8 +49,8 @@ export function ControlPanel() {
     <div className="pointer-events-auto flex w-[min(92vw,30rem)] flex-col gap-3 rounded-2xl border border-border scene-overlay p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground/80">S-PAC</p>
-          <p className="text-sm text-muted-foreground">Smart Play AI Companion</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/80">AI Play Mates</p>
+          <p className="text-sm text-muted-foreground">AI Play Mates for kids</p>
         </div>
         <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium capitalize scene-accent">
           {state.current}

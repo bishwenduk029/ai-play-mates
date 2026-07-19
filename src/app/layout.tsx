@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "S-PAC — Smart Play AI Companion",
-  description: "A three.js play companion for young kids. Livekit agent integration coming soon.",
+  title: "AI Play Mates — AI play companions for kids",
+  description: "An AI companion that sees your child, talks to them, and brings a 3D character to life through play.",
 };
 
 export default function RootLayout({

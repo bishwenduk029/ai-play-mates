@@ -52,12 +52,12 @@ export default function SignInPage() {
       <Card className="w-full max-w-md border-white/10 bg-slate-900/50 backdrop-blur-md">
         <CardHeader>
           <CardTitle className="text-white">
-            S-PAC · {mode === "signin" ? "Welcome back" : "Create account"}
+            AI Play Mates · {mode === "signin" ? "Welcome back" : "Create account"}
           </CardTitle>
           <CardDescription className="text-white/50">
             {mode === "signin"
               ? "Sign in to play with your AI companion"
-              : "Sign up to start playing with S-PAC"}
+              : "Sign up to start playing with AI Play Mates"}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
