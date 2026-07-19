@@ -1,26 +1,9 @@
-import { Scene } from "@/components/Scene";
-import { ControlPanel } from "@/components/ControlPanel";
-import { LiveKitSession } from "@/components/LiveKitSession";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
-export default function Home() {
-  return (
-    <main className="relative h-screen w-screen overflow-hidden bg-slate-950">
-      <Scene />
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-4 sm:p-6">
-        <ControlPanel />
-      </div>
-
-      <div className="pointer-events-none absolute left-4 top-4 sm:left-6 sm:top-6">
-        <h1 className="text-lg font-semibold text-white">
-          S-PAC <span className="text-sky-400">·</span> Play Companion
-        </h1>
-        <p className="text-xs text-white/50">three.js + livekit vision agent</p>
-      </div>
-
-      <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
-        <LiveKitSession />
-      </div>
-    </main>
-  );
+// Root route: authenticated users go to /play, others to /landing.
+export default async function RootPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  redirect(session ? "/play" : "/landing");
 }

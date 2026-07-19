@@ -56,3 +56,5 @@ next-env.d.ts
 
 # Vercel
 .vercel
+sqlite.db
+drizzle/
