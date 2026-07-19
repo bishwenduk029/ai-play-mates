@@ -58,3 +58,13 @@ next-env.d.ts
 .vercel
 sqlite.db
 drizzle/
+
+# AI agent skills / tooling — local only, never commit
+.agents/
+.claude/
+.skills/
+.opencode/
+.cursor/
+.claude-code/
+*.skills-lock.json
+skills-lock.json
