@@ -48,7 +48,7 @@ const POSE_LANDMARKS = {
 const KICK_COOLDOWN_MS = 400;
 const JUMP_COOLDOWN_MS = 700;
 const JUMP_RISE_THRESHOLD = 0.04; // hips rise (normalized y) below the rolling average
-const KICK_THRESHOLD = 0.05; // ankle rises this far above (lower y than) knee OR hip
+const KICK_THRESHOLD = 0.04; // knee/ankle rises this far above (lower y than) hip/knee
 
 /** Touch input set externally by on-screen controls (mobile). */
 interface TouchInput {
@@ -222,15 +222,16 @@ export function usePosePunch(enabled: boolean) {
       let jump = 0;
       let run = 0;
 
-      // KICK: an ankle rises above (lower y than) its knee OR its hip.
-      // A kid kicking toward a webcam lifts the foot forward+up; checking
-      // against the hip (high knee raise) is far more reliable than knee-only,
-      // which barely moves for a front kick.
-      const lKickKnee = lAnkle && lKnee && lAnkle.y < lKnee.y - KICK_THRESHOLD;
-      const rKickKnee = rAnkle && rKnee && rAnkle.y < rKnee.y - KICK_THRESHOLD;
-      const lKickHip = lAnkle && lHip && lAnkle.y < lHip.y - KICK_THRESHOLD;
-      const rKickHip = rAnkle && rHip && rAnkle.y < rHip.y - KICK_THRESHOLD;
-      if ((lKickKnee || rKickKnee || lKickHip || rKickHip) && now - lastKickRef.current > KICK_COOLDOWN_MS) {
+      // KICK: a knee rises above (lower y than) its hip, OR an ankle rises above
+      // its knee. The knee-raise is the PRIMARY trigger — it's the most reliable
+      // kick signal from a front-facing webcam (a kid kicking forward lifts the
+      // knee well above the hip), and the knee landmark is more stable than the
+      // ankle on the lite model. Ankle-above-knee is a secondary, lower bar.
+      const lKneeUp = lKnee && lHip && lKnee.y < lHip.y - KICK_THRESHOLD;
+      const rKneeUp = rKnee && rHip && rKnee.y < rHip.y - KICK_THRESHOLD;
+      const lAnkleUp = lAnkle && lKnee && lAnkle.y < lKnee.y - 0.02;
+      const rAnkleUp = rAnkle && rKnee && rAnkle.y < rKnee.y - 0.02;
+      if ((lKneeUp || rKneeUp || lAnkleUp || rAnkleUp) && now - lastKickRef.current > KICK_COOLDOWN_MS) {
         lastKickRef.current = now;
         kick = 1;
       }

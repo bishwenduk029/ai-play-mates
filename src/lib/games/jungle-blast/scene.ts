@@ -70,7 +70,7 @@ export class JungleBlastScene extends Phaser.Scene {
   private gameOverGroup: Phaser.GameObjects.GameObject[] = [];
 
   private score = 0;
-  private lives = 3;
+  private lives = Infinity; // unlimited — game never ends on lives
   private nextSpawnAt = 0;
   private elapsed = 0;
   private gameOver = false;
@@ -93,7 +93,8 @@ export class JungleBlastScene extends Phaser.Scene {
     this.trees = [];
     this.gameOverGroup = [];
     this.score = 0;
-    this.lives = 3;
+    this.misses = 0;
+    this.lives = Infinity;
     this.nextSpawnAt = 0;
     this.elapsed = 0;
     this.gameOver = false;
@@ -164,7 +165,7 @@ export class JungleBlastScene extends Phaser.Scene {
       .text(16, 14, "Score: 0", { fontSize: "22px", color: "#f8fafc" })
       .setDepth(20);
     this.livesText = this.add
-      .text(16, 42, "Lives: ❤❤❤", { fontSize: "18px", color: "#f8fafc" })
+      .text(16, 42, "Misses: 0", { fontSize: "18px", color: "#f8fafc" })
       .setDepth(20);
     this.hintText = this.add
       .text(width / 2, height - 24, "KICK to blast!  JUMP to ground-pound!  ←/→ or lean to run", {
@@ -400,13 +401,15 @@ export class JungleBlastScene extends Phaser.Scene {
     }
   }
 
+  private misses = 0;
+
   private loseLife() {
-    this.lives -= 1;
-    this.livesText.setText("Lives: " + "❤".repeat(Math.max(0, this.lives)));
+    // Unlimited lives — never end the game. Track misses for feedback only.
+    this.misses += 1;
+    this.livesText.setText(`Misses: ${this.misses}`);
     // Red flash on the hero.
     this.heroBody.setFillStyle(0xef4444);
     this.time.delayedCall(150, () => this.heroBody.setFillStyle(C.hero));
-    if (this.lives <= 0) this.endGame();
   }
 
   private endGame() {
