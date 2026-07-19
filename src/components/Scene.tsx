@@ -7,7 +7,6 @@ import { Figure } from "./Figure";
 /** Sets the forest image as the scene background. */
 function SceneBackground() {
   const texture = useTexture("/scene-bg.jpg");
-  texture.colorSpace = "srgb";
   return <primitive object={texture} attach="background" />;
 }
 

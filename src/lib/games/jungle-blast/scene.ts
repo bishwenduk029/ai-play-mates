@@ -60,6 +60,7 @@ export class JungleBlastScene extends Phaser.Scene {
   private hero!: Phaser.GameObjects.Container;
   private heroBody!: Phaser.GameObjects.Arc;
   private trees: Tree[] = [];
+  private forestBg!: Phaser.GameObjects.Image;
   private animals: Animal[] = [];
   private ground!: Phaser.GameObjects.Rectangle;
   private scoreText!: Phaser.GameObjects.Text;
@@ -79,9 +80,23 @@ export class JungleBlastScene extends Phaser.Scene {
     super("jungle-blast");
   }
 
+  preload() {
+    // Reuse the forest photo already shipped on main (public/scene-bg.jpg)
+    // as the deep parallax backdrop. Loaded by key 'forest'.
+    this.load.image("forest", "/scene-bg.jpg");
+  }
+
   create() {
     const { width, height } = this.scale;
-    this.cameras.main.setBackgroundColor(C.sky);
+
+    // --- Far parallax: real forest photo, scrolls slowest ---
+    // Image is 2048x1152 (16:9); canvas is 960x540 (16:9) so it fills with no crop.
+    // Scaled to canvas height; positioned centred; scrolls left at 0.1x and wraps.
+    this.forestBg = this.add.image(width / 2, height / 2, "forest");
+    const bgScale = height / 1152;
+    this.forestBg.setScale(bgScale).setScrollFactor(0).setDepth(-1);
+    // Tint slightly darker so the bright cartoon shapes read in front.
+    this.forestBg.setAlpha(0.85);
 
     // --- Parallax jungle: three layers of stylized tree silhouettes ---
     this.trees = [
@@ -186,6 +201,12 @@ export class JungleBlastScene extends Phaser.Scene {
     }
 
     // --- Parallax scroll ---
+    // Far photo scrolls slowest (0.1x), wraps when it has scrolled one full width.
+    this.forestBg.x -= forward * 0.1 * delta;
+    const halfScaled = this.forestBg.displayWidth / 2;
+    if (this.forestBg.x < GAME_W / 2 - halfScaled) {
+      this.forestBg.x = GAME_W / 2;
+    }
     for (const tree of this.trees) {
       tree.go.x -= forward * tree.speed * delta;
       if (tree.go.x < -120) tree.go.x += GAME_W + 240;
