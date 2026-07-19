@@ -1,0 +1,13 @@
+{
+  "id": "samba",
+  "label": "Samba Dancer",
+  "description": "VRM humanoid playing a retargeted Mixamo Samba Dancing FBX clip. Demonstrates the vrm-fbx upload path: a VRM model + a separate FBX animation file, retargeted onto the VRM normalized humanoid rig at runtime. Idle is procedural (the FBX has no idle clip).",
+  "modelType": "vrm-fbx",
+  "modelPath": "/characters/samba/model.vrm",
+  "animationPath": "/characters/samba/animations.fbx",
+  "baseY": 0,
+  "actions": [
+    { "name": "idle", "label": "Idle", "description": "Calm resting pose (procedural breathing).", "durationMs": null, "clip": null },
+    { "name": "dance", "label": "Dance", "description": "Break into a samba dance.", "durationMs": null, "clip": "mixamo.com" }
+  ]
+}

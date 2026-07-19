@@ -5,7 +5,6 @@ import type { Group } from "three";
 import { controller } from "@/lib/actions";
 import type { FigureProps } from "@/lib/figure-registry";
 import { registerFigure } from "@/lib/figure-registry";
-// Soft default; overridden by character manifesto.
 
 const CREAM = "#f5ead3";
 const CREAM_DARK = "#e8d4b0";
@@ -274,3 +273,5 @@ export function BunnyFigure({ baseY = 0.8 }: FigureProps) {
     </group>
   );
 }
+
+registerFigure("primitive", BunnyFigure);

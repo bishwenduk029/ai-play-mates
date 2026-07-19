@@ -94,7 +94,7 @@ export async function inspectModelBrowser(
 }
 
 function clipToToolName(clip: string): string {
-  const words = clip.trim().split(/[\s_-]+/);
+  const words = clip.trim().split(/[\s_.-]+/).filter(Boolean);
   const first = words[0].toLowerCase();
   const rest = words.slice(1).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
   return first + rest.join("");

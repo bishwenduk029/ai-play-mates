@@ -7,6 +7,7 @@ import {
   fetchAllCharacters,
   type CharacterManifest,
 } from "@/lib/characters";
+import { CharacterUploader } from "./CharacterUploader";
 
 /**
  * Dev control panel.
@@ -17,26 +18,24 @@ export function ControlPanel() {
   const state = useActionState();
   const [characters, setCharacters] = useState<CharacterManifest[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showUploader, setShowUploader] = useState(false);
   const character = controller.getCharacter();
   const sessionLive = controller.isSessionLive();
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadCharacters = () => {
     fetchAllCharacters()
       .then((list) => {
-        if (cancelled) return;
         setCharacters(list);
         // Auto-select the first character if none is active yet.
         if (!controller.getCharacter() && list[0]) {
           controller.setCharacter(list[0]);
         }
       })
-      .catch((e) => {
-        if (!cancelled) setLoadError(String(e));
-      });
-    return () => {
-      cancelled = true;
-    };
+      .catch((e) => setLoadError(String(e)));
+  };
+
+  useEffect(() => {
+    loadCharacters();
   }, []);
 
   const activeActions = character?.actions ?? [];
@@ -156,9 +155,27 @@ export function ControlPanel() {
 
       <p className="text-[11px] leading-relaxed text-muted-foreground">
         Console:{" "}
-        <code className="text-muted-foreground">SPAC.trigger("attack")</code>,{" "}
-        <code className="text-muted-foreground">SPAC.walkLeft()</code>
+        <code className="text-muted-foreground">{`SPAC.trigger("attack")`}</code>,{" "}
+        <code className="text-muted-foreground">{`SPAC.walkLeft()`}</code>
       </p>
+
+      <button
+        onClick={() => setShowUploader((v) => !v)}
+        disabled={sessionLive}
+        className="rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted/80 disabled:opacity-40"
+      >
+        {showUploader ? "Close uploader" : "+ Upload character"}
+      </button>
+
+      {showUploader && (
+        <CharacterUploader
+          onCreated={(c) => {
+            loadCharacters();
+            // Auto-select the freshly created character so it's playable.
+            controller.setCharacter(c);
+          }}
+        />
+      )}
     </div>
   );
 }

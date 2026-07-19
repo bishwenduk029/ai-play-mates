@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { access } from "node:fs/promises";
-import { inspectGlb } from "@/lib/glb-inspect";
+import { inspectModel } from "@/lib/glb-inspect";
 
 /**
  * POST /api/characters/inspect
@@ -10,6 +10,9 @@ import { inspectGlb } from "@/lib/glb-inspect";
  * Returns the discovered animation clips + suggested roles, without writing
  * anything to disk. The UI shows these as a checklist so the user can pick
  * which clips to expose as actions before creating the character.
+ *
+ * Used for GLB and VRM (both are glTF binary containers). VRM+FBX animation
+ * files are inspected client-side via fbx-browser.ts.
  */
 export async function POST(req: NextRequest) {
   let body: { glbPath?: string };
@@ -34,7 +37,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await inspectGlb(glbPath);
+    const result = await inspectModel(glbPath);
     return NextResponse.json(result);
   } catch (e) {
     return NextResponse.json(

@@ -5,41 +5,39 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import type { Group, AnimationAction, AnimationClip } from "three";
 import { controller } from "@/lib/actions";
-import type { CharacterAction } from "@/lib/characters";
-
-interface Props {
-  modelPath: string;
-  baseY: number;
-  actions: CharacterAction[];
-}
+import { type FigureProps, registerFigure } from "@/lib/figure-registry";
 
 /**
  * Generic fully-rigged GLB figure. Clip names come from the character
- * manifesto (action.clip). Adding a new GLB character does not require
+ * manifest (action.clip). Adding a new GLB character does not require
  * changes here — just ship model.glb + manifest.json.
+ *
+ * Registered for modelType="glb" (Strategy registry). Contract: `modelPath`
+ * is present for every glb character (enforced by the manifest builder).
  */
-export function CreatureFigure({ modelPath, baseY, actions: actionList }: Props) {
+export function CreatureFigure({ modelPath, baseY, actions }: FigureProps) {
   const group = useRef<Group>(null);
-  const { scene, animations } = useGLTF(modelPath) as {
+  const { scene, animations } = useGLTF(modelPath!) as {
     scene: Group;
     animations: AnimationClip[];
   };
-  const { actions } = useAnimations(animations, group);
+  const { actions: mixerActions } = useAnimations(animations, group);
   const currentClip = useRef<string | null>(null);
 
   // action name -> clip name (from the manifest)
   const clipByAction = useRef<Record<string, string>>({});
   useEffect(() => {
+    const list = actions ?? [];
     const map: Record<string, string> = {};
-    for (const a of actionList) {
+    for (const a of list) {
       if (a.clip) map[a.name] = a.clip;
       // Walk directions all share the same walk clip.
       if (a.name.startsWith("walk") && a.clip) map.walk = a.clip;
     }
     // idle regularly falls back to Idle / first clip
-    if (!map.idle) map.idle = actionList.find((a) => a.name === "idle")?.clip ?? "Idle";
+    if (!map.idle) map.idle = list.find((a) => a.name === "idle")?.clip ?? "Idle";
     clipByAction.current = map;
-  }, [actionList]);
+  }, [actions]);
 
   useEffect(() => {
     scene.traverse((obj) => {
@@ -59,7 +57,7 @@ export function CreatureFigure({ modelPath, baseY, actions: actionList }: Props)
 
     // Look up clip each frame from the live actions map (GLB load is async).
     const clips = new Map<string, AnimationAction>();
-    for (const [name, action] of Object.entries(actions)) {
+    for (const [name, action] of Object.entries(mixerActions)) {
       if (action) clips.set(name, action);
     }
 
@@ -99,3 +97,5 @@ export function CreatureFigure({ modelPath, baseY, actions: actionList }: Props)
     </group>
   );
 }
+
+registerFigure("glb", CreatureFigure);

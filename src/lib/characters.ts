@@ -8,7 +8,7 @@
  * the generic glb path.
  */
 
-export type ModelType = "glb" | "vrm" | "primitive";
+export type ModelType = "glb" | "vrm" | "vrm-fbx" | "primitive";
 
 export interface CharacterAction {
   name: string;
@@ -16,8 +16,10 @@ export interface CharacterAction {
   description: string;
   /** null = loops until another action is called. */
   durationMs: number | null;
-  /** For modelType=glb: the animation clip name inside the GLB. */
-  clip?: string;
+  /** For modelType=glb: the animation clip name inside the GLB.
+   *  For modelType=vrm-fbx: the FBX clip name (retargeted at runtime), or
+   *    null for a procedural action (e.g. idle when the FBX has no idle clip). */
+  clip?: string | null;
 }
 
 export interface CharacterManifest {
@@ -25,8 +27,13 @@ export interface CharacterManifest {
   label: string;
   description: string;
   modelType: ModelType;
-  /** Public URL path to the model file (filesystem today, CDN later). null for primitive. */
+  /** Public URL path to the model file (GLB / VRM). null for primitive. */
   modelPath: string | null;
+  /**
+   * For modelType="vrm-fbx": public URL path to the FBX animation file whose
+   * clips are retargeted onto the VRM humanoid rig at runtime. null otherwise.
+   */
+  animationPath?: string | null;
   baseY: number;
   actions: CharacterAction[];
 }
