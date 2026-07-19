@@ -14,7 +14,8 @@
 import Phaser from "phaser";
 
 export interface JungleBlastPoseInput {
-  punch: number;
+  kick: number;
+  jump: number;
   run: number;
 }
 
@@ -73,8 +74,10 @@ export class JungleBlastScene extends Phaser.Scene {
   private nextSpawnAt = 0;
   private elapsed = 0;
   private gameOver = false;
-  private punchFlash = 0;
+  private kickFlash = 0;
   private heroTargetX = HERO_X;
+  private heroJumpY = 0; // current jump offset (0 = on ground)
+  private heroJumping = false;
 
   constructor() {
     super("jungle-blast");
@@ -163,7 +166,8 @@ export class JungleBlastScene extends Phaser.Scene {
     // Read pose input from the React host (set via the game registry).
     const pose = this.game.registry.get("pose") as JungleBlastPoseInput | undefined;
     const run = pose?.run ?? 0;
-    const punch = pose?.punch ?? 0;
+    const kick = pose?.kick ?? 0;
+    const jump = pose?.jump ?? 0;
 
     // --- Hero run (camera scrolls to fake forward motion + actual x shift) ---
     // Deadzone: ignore tiny run values (poses are noisy); ease toward target
@@ -179,25 +183,48 @@ export class JungleBlastScene extends Phaser.Scene {
     // Ease the hero toward its target (~5x slower than a snap = smooth glide).
     const ease = Math.min(1, delta * 8);
     this.hero.x += (this.heroTargetX - this.hero.x) * ease;
-    // Bobbing walk animation.
-    this.hero.y = GROUND_Y + Math.sin(this.elapsed * 10) * 3;
-    (this.hero.getAt(0) as Phaser.GameObjects.Rectangle).rotation = Math.sin(
-      this.elapsed * 10,
-    ) * 0.3;
-    (this.hero.getAt(1) as Phaser.GameObjects.Rectangle).rotation = -Math.sin(
-      this.elapsed * 10,
-    ) * 0.3;
-
-    // --- Punch animation + blast ---
-    if (punch >= 1 && this.punchFlash <= 0) {
-      this.doPunch();
-      this.punchFlash = 0.3;
+    // Bobbing walk animation (suppressed while airborne).
+    if (!this.heroJumping) {
+      this.hero.y = GROUND_Y + Math.sin(this.elapsed * 10) * 3;
+      (this.hero.getAt(0) as Phaser.GameObjects.Rectangle).rotation = Math.sin(
+        this.elapsed * 10,
+      ) * 0.3;
+      (this.hero.getAt(1) as Phaser.GameObjects.Rectangle).rotation = -Math.sin(
+        this.elapsed * 10,
+      ) * 0.3;
     }
-    if (this.punchFlash > 0) {
-      this.punchFlash -= delta;
-      // Raise arm while punching.
-      const armR = this.hero.getAt(4) as Phaser.GameObjects.Rectangle;
-      armR.rotation = -1.6 * Math.max(0, this.punchFlash / 0.3);
+
+    // --- Kick animation + blast (nearest animal) ---
+    if (kick >= 1 && this.kickFlash <= 0) {
+      this.doKick();
+      this.kickFlash = 0.3;
+    }
+    if (this.kickFlash > 0) {
+      this.kickFlash -= delta;
+      // Kick the right leg forward while kicking.
+      const legR = this.hero.getAt(1) as Phaser.GameObjects.Rectangle;
+      legR.rotation = -1.4 * Math.max(0, this.kickFlash / 0.3);
+    }
+
+    // --- Jump (hero leaps; ground-pound blasts ALL nearby animals on landing) ---
+    if (jump >= 1 && !this.heroJumping) {
+      this.heroJumping = true;
+      const startY = this.hero.y;
+      this.tweens.add({
+        targets: this,
+        heroJumpY: { from: 0, to: -150 },
+        duration: 220,
+        yoyo: true,
+        ease: "Quad.out",
+        onUpdate: () => {
+          this.hero.y = startY + this.heroJumpY;
+        },
+        onComplete: () => {
+          this.heroJumpY = 0;
+          this.heroJumping = false;
+          this.doGroundPound();
+        },
+      });
     }
 
     // --- Parallax scroll ---

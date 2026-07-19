@@ -14,7 +14,7 @@ export function Scene() {
   return (
     <Canvas
       shadows
-      camera={{ position: [3, 2.5, 4], fov: 45 }}
+      camera={{ position: [3, 3.2, 4.2], fov: 42 }}
       className="!absolute inset-0"
     >
       <SceneBackground />
@@ -50,7 +50,7 @@ export function Scene() {
         maxDistance={8}
         minPolarAngle={Math.PI / 6}
         maxPolarAngle={Math.PI / 2 + 0.1}
-        target={[0, 1, 0]}
+        target={[0, 0.4, 0]}
       />
     </Canvas>
   );

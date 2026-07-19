@@ -4,14 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { PoseLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 
 /**
- * MediaPipe PoseLandmarker hook — detects a kid's "punch" and "run" actions
- * from webcam pose, with a keyboard fallback so the game is always testable.
+ * MediaPipe PoseLandmarker hook — detects a kid's "kick", "jump", and "run"
+ * actions from webcam pose, with a keyboard fallback so the game is always
+ * testable.
  *
  * Detection strategy (robust for kids, no ML model training needed):
- * - PUNCH: a hand (wrist) rises above the head (nose). Triggers once per rise
- *   (debounced) so one punch = one blast, not a stream.
- * - RUN: both hips move left/right faster than a threshold, OR the body leans
- *   side to side. Drives the hero's horizontal speed.
+ * - KICK: an ankle rises above its knee (foot comes up). Triggers once per rise
+ *   (debounced 400ms) so one kick = one blast, not a stream.
+ * - JUMP: both hips rise quickly above a calibrated standing baseline. Triggers
+ *   once per jump (debounced 700ms — jumps are slower to reset than kicks).
+ * - RUN: horizontal hip-centre velocity (mirrored for selfie view).
  *
  * The hook owns the webcam + model lifecycle and exposes a tiny state object
  * the game polls each frame. No React re-renders during play — the consumer
@@ -19,8 +21,10 @@ import { PoseLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
  */
 
 export interface PoseState {
-  /** 0..1 punch intensity; 1 = fresh punch this frame. Decays each frame. */
-  punch: number;
+  /** 1 = fresh kick this frame (debounced). */
+  kick: number;
+  /** 1 = fresh jump this frame (debounced). */
+  jump: number;
   /** -1..1 run direction (-1 left, 1 right, 0 still). */
   run: number;
   /** True while the webcam + model are live. */
@@ -29,25 +33,31 @@ export interface PoseState {
   error: string | null;
 }
 
-const NO_POSE: PoseState = { punch: 0, run: 0, ready: false, error: null };
+const NO_POSE: PoseState = { kick: 0, jump: 0, run: 0, ready: false, error: null };
 
 const POSE_LANDMARKS = {
   nose: 0,
-  leftWrist: 15,
-  rightWrist: 16,
   leftHip: 23,
   rightHip: 24,
-  leftShoulder: 11,
-  rightShoulder: 12,
+  leftKnee: 25,
+  rightKnee: 26,
+  leftAnkle: 27,
+  rightAnkle: 28,
 } as const;
+
+const KICK_COOLDOWN_MS = 400;
+const JUMP_COOLDOWN_MS = 700;
+const JUMP_RISE_THRESHOLD = 0.06; // hips rise (normalized y) above baseline
 
 export function usePosePunch(enabled: boolean) {
   const [state, setState] = useState<PoseState>(NO_POSE);
-  const poseRef = useRef<PoseState>({ punch: 0, run: 0, ready: false, error: null });
+  const poseRef = useRef<PoseState>({ kick: 0, jump: 0, run: 0, ready: false, error: null });
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const landmarkerRef = useRef<PoseLandmarker | null>(null);
   const rafRef = useRef<number | null>(null);
-  const lastPunchRef = useRef(0);
+  const lastKickRef = useRef(0);
+  const lastJumpRef = useRef(0);
+  const hipBaselineRef = useRef<number | null>(null);
   const hipHistoryRef = useRef<{ x: number; t: number }[]>([]);
 
   // Keyboard fallback state (always active — lets you test without a camera).
@@ -76,8 +86,10 @@ export function usePosePunch(enabled: boolean) {
         let run = 0;
         if (k["ArrowLeft"] || k["KeyA"]) run -= 1;
         if (k["ArrowRight"] || k["KeyD"]) run += 1;
-        const punch = k["Space"] ? 1 : 0;
-        const next: PoseState = { punch, run, ready: true, error: null };
+        run = Math.max(-1, Math.min(1, run));
+        const kick = k["Space"] ? 1 : 0;
+        const jump = k["ArrowUp"] || k["KeyW"] ? 1 : 0;
+        const next: PoseState = { kick, jump, run, ready: true, error: null };
         poseRef.current = next;
         setState(next);
         rafRef.current = requestAnimationFrame(loop);
@@ -136,24 +148,48 @@ export function usePosePunch(enabled: boolean) {
           const result = lm.detectForVideo(v, performance.now());
           const k = keysRef.current; // keyboard can still augment
 
-          let punch = 0;
+          let kick = 0;
+          let jump = 0;
           let run = 0;
 
           if (result.landmarks && result.landmarks.length > 0) {
             const pts = result.landmarks[0];
-            const nose = pts[POSE_LANDMARKS.nose];
-            const lWrist = pts[POSE_LANDMARKS.leftWrist];
-            const rWrist = pts[POSE_LANDMARKS.rightWrist];
             const lHip = pts[POSE_LANDMARKS.leftHip];
             const rHip = pts[POSE_LANDMARKS.rightHip];
-
-            // PUNCH: either wrist above the nose (lower y = higher on screen).
-            const lPunch = lWrist && nose && lWrist.y < nose.y - 0.05;
-            const rPunch = rWrist && nose && rWrist.y < nose.y - 0.05;
+            const lKnee = pts[POSE_LANDMARKS.leftKnee];
+            const rKnee = pts[POSE_LANDMARKS.rightKnee];
+            const lAnkle = pts[POSE_LANDMARKS.leftAnkle];
+            const rAnkle = pts[POSE_LANDMARKS.rightAnkle];
             const now = performance.now();
-            if ((lPunch || rPunch) && now - lastPunchRef.current > 400) {
-              lastPunchRef.current = now;
-              punch = 1;
+
+            // KICK: an ankle rises above (lower y than) its knee. Kids lift a
+            // foot forward+up; this fires reliably without velocity math.
+            const lKick = lAnkle && lKnee && lAnkle.y < lKnee.y - 0.02;
+            const rKick = rAnkle && rKnee && rAnkle.y < rKnee.y - 0.02;
+            if ((lKick || rKick) && now - lastKickRef.current > KICK_COOLDOWN_MS) {
+              lastKickRef.current = now;
+              kick = 1;
+            }
+
+            // JUMP: hip centre rises above the standing baseline. Calibrate the
+            // baseline from the highest (smallest y) hip position seen recently,
+            // so standing tall resets the baseline and a dip-then-rise counts.
+            const hipY = (lHip.y + rHip.y) / 2;
+            if (
+              hipBaselineRef.current === null ||
+              hipY < hipBaselineRef.current
+            ) {
+              hipBaselineRef.current = hipY; // track the tallest stance
+            }
+            if (
+              hipBaselineRef.current !== null &&
+              hipY < hipBaselineRef.current - JUMP_RISE_THRESHOLD &&
+              now - lastJumpRef.current > JUMP_COOLDOWN_MS
+            ) {
+              lastJumpRef.current = now;
+              jump = 1;
+              // Reset baseline so the kid must land + rise again for the next jump.
+              hipBaselineRef.current = null;
             }
 
             // RUN: horizontal hip centre velocity.
@@ -177,9 +213,10 @@ export function usePosePunch(enabled: boolean) {
           if (k["ArrowLeft"] || k["KeyA"]) run -= 1;
           if (k["ArrowRight"] || k["KeyD"]) run += 1;
           run = Math.max(-1, Math.min(1, run));
-          if (k["Space"]) punch = Math.max(punch, 1);
+          if (k["Space"]) kick = Math.max(kick, 1);
+          if (k["ArrowUp"] || k["KeyW"]) jump = Math.max(jump, 1);
 
-          const next: PoseState = { punch, run, ready: true, error: null };
+          const next: PoseState = { kick, jump, run, ready: true, error: null };
           poseRef.current = next;
           setState(next);
           rafRef.current = requestAnimationFrame(loop);
@@ -189,10 +226,11 @@ export function usePosePunch(enabled: boolean) {
         if (cancelled) return;
         const msg = e instanceof Error ? e.message : String(e);
         const next: PoseState = {
-          punch: 0,
+          kick: 0,
+          jump: 0,
           run: 0,
           ready: false,
-          error: `Camera unavailable: ${msg}. Using keyboard (arrows + space).`,
+          error: `Camera unavailable: ${msg}. Using keyboard (arrows + space/up).`,
         };
         poseRef.current = { ...next, ready: true };
         setState(next);
@@ -208,8 +246,10 @@ export function usePosePunch(enabled: boolean) {
         let run = 0;
         if (k["ArrowLeft"] || k["KeyA"]) run -= 1;
         if (k["ArrowRight"] || k["KeyD"]) run += 1;
-        const punch = k["Space"] ? 1 : 0;
-        const next: PoseState = { punch, run, ready: true, error: null };
+        run = Math.max(-1, Math.min(1, run));
+        const kick = k["Space"] ? 1 : 0;
+        const jump = k["ArrowUp"] || k["KeyW"] ? 1 : 0;
+        const next: PoseState = { kick, jump, run, ready: true, error: null };
         poseRef.current = next;
         setState(next);
         rafRef.current = requestAnimationFrame(loop);
