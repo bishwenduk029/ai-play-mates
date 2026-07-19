@@ -9,8 +9,9 @@ import { JUNGLE_BLAST_CONFIG, type JungleBlastPoseInput } from "@/lib/games/jung
  * Jungle Blast — the wired-together game.
  *
  * Pipes MediaPipe pose data (kick/jump/run) from usePosePunch into the Phaser
- * game's registry every frame; the scene reads it in update(). Falls back to
- * keyboard (arrows + space) automatically when the camera is off.
+ * game's registry every frame; the scene reads it in update(). Keyboard is a
+ * desktop fallback for testing; on mobile the game is driven by MediaPipe pose
+ * via the device camera.
  */
 export function JungleBlastGame() {
   const { state, getPose } = usePosePunch(true);
@@ -55,7 +56,7 @@ export function JungleBlastGame() {
         />
         <span>
           {state.ready
-            ? state.error ?? "KICK (lift a foot) + JUMP (both feet up) + run (lean) — or space / up / arrows"
+            ? state.error ?? "KICK (lift a foot) + JUMP (both feet up) + run (lean)"
             : "Starting camera…"}
         </span>
       </div>
