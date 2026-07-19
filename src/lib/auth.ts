@@ -26,8 +26,13 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  trustedOrigins: process.env.NODE_ENV === "development"
-    ? ["http://localhost:3000", "http://localhost:3001"]
-    : undefined,
+  // Auto-include localhost (dev) + BETTER_AUTH_URL (prod) so origin checks
+  // pass on both Vercel and local. Add extra origins via TRUSTED_ORIGINS env.
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
+    ...(process.env.TRUSTED_ORIGINS?.split(",") ?? []),
+  ],
   plugins: [nextCookies()],
 });
