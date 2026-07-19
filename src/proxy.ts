@@ -6,20 +6,13 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = getSessionCookie(request);
 
-  // Public routes — no auth required.
-  const publicPaths = ["/", "/landing", "/login", "/signup"];
-  const isPublic = publicPaths.includes(pathname);
-
   // If on auth pages and already logged in, go to play.
   if ((pathname === "/login" || pathname === "/signup") && sessionCookie) {
     return NextResponse.redirect(new URL("/play", request.url));
   }
 
-  // If on landing page (root "/"), leave it public.
-  if (pathname === "/") return NextResponse.next();
-
-  // Everything else requires a session cookie.
-  if (!isPublic && !sessionCookie) {
+  // /play requires a session cookie. Everything else is public.
+  if (pathname === "/play" && !sessionCookie) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -27,6 +20,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Run on all routes except static assets and API auth (better-auth handles its own).
   matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth|characters|.*\\.).*)"],
 };

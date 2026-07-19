@@ -14,7 +14,7 @@ export default async function PlayPage() {
   }
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-slate-950">
+    <main className="scene-backdrop relative h-screen w-screen overflow-hidden">
       <Scene />
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-4 sm:p-6">
@@ -22,10 +22,10 @@ export default async function PlayPage() {
       </div>
 
       <div className="pointer-events-none absolute left-4 top-4 sm:left-6 sm:top-6">
-        <h1 className="text-lg font-semibold text-white">
-          S-PAC <span className="text-sky-400">·</span> Play Companion
+        <h1 className="text-lg font-semibold">
+          S-PAC <span className="scene-accent">·</span> Play Companion
         </h1>
-        <p className="text-xs text-white/50">
+        <p className="scene-overlay-muted text-xs">
           Hi {session.user.name}! three.js + livekit vision agent
         </p>
       </div>

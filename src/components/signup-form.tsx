@@ -126,7 +126,7 @@ export function SignupForm({
                   Must be at least 8 characters long.
                 </FieldDescription>
               </Field>
-              {error && <p className="text-sm text-rose-400">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <Field>
                 <Button type="submit" disabled={loading}>
                   {loading ? "Creating account..." : "Create Account"}

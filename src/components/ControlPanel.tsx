@@ -46,13 +46,13 @@ export function ControlPanel() {
   const hasWalk = activeActions.some((a) => a.name.startsWith("walk"));
 
   return (
-    <div className="pointer-events-auto flex w-[min(92vw,30rem)] flex-col gap-3 rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-md">
+    <div className="pointer-events-auto flex w-[min(92vw,30rem)] flex-col gap-3 rounded-2xl border border-border scene-overlay p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-widest text-sky-300/80">S-PAC</p>
-          <p className="text-sm text-white/70">Smart Play AI Companion</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/80">S-PAC</p>
+          <p className="text-sm text-muted-foreground">Smart Play AI Companion</p>
         </div>
-        <span className="rounded-full bg-sky-500/20 px-3 py-1 text-xs font-medium capitalize text-sky-200">
+        <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium capitalize scene-accent">
           {state.current}
         </span>
       </div>
@@ -60,7 +60,7 @@ export function ControlPanel() {
       {/* Character picker — locked during a live LiveKit session. */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-widest text-white/40">
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
             Character
           </span>
           {sessionLive && (
@@ -78,8 +78,8 @@ export function ControlPanel() {
                 className={[
                   "rounded-lg px-2.5 py-1 text-xs font-medium transition",
                   active
-                    ? "bg-emerald-400 text-slate-900"
-                    : "bg-white/5 text-white/70 hover:bg-white/10",
+                    ? "bg-emerald-400 text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80",
                   sessionLive && !active ? "opacity-40" : "",
                 ].join(" ")}
               >
@@ -100,8 +100,8 @@ export function ControlPanel() {
           className={[
             "rounded-xl px-3 py-2 text-sm font-medium transition",
             state.current === "idle"
-              ? "bg-sky-400 text-slate-900"
-              : "bg-white/5 text-white/80 hover:bg-white/10",
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted/80 hover:bg-muted/80",
           ].join(" ")}
         >
           Idle
@@ -115,8 +115,8 @@ export function ControlPanel() {
               className={[
                 "rounded-xl px-3 py-2 text-sm font-medium transition",
                 active
-                  ? "bg-sky-400 text-slate-900"
-                  : "bg-white/5 text-white/80 hover:bg-white/10",
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/80 hover:bg-muted/80",
               ].join(" ")}
             >
               {a.label}
@@ -126,8 +126,8 @@ export function ControlPanel() {
       </div>
 
       {hasWalk && (
-        <div className="flex flex-col items-center gap-1.5 rounded-xl bg-white/5 p-2">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Walk</p>
+        <div className="flex flex-col items-center gap-1.5 rounded-xl bg-muted p-2">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Walk</p>
           <div className="grid grid-cols-3 gap-1.5">
             <span />
             <WalkBtn name="walkForward" label="▲" />
@@ -139,25 +139,25 @@ export function ControlPanel() {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3 rounded-xl bg-white/5 px-3 py-2">
-        <p className="text-[11px] text-white/60">Lipsync test</p>
+      <div className="flex items-center justify-between gap-3 rounded-xl bg-muted px-3 py-2">
+        <p className="text-[11px] text-muted-foreground">Lipsync test</p>
         <button
           onClick={() => controller.setSpeaking(!controller.isSpeaking())}
           className={[
             "rounded-full px-3 py-1 text-xs font-medium transition",
             controller.isSpeaking()
-              ? "bg-pink-400 text-slate-900"
-              : "bg-white/10 text-white/80 hover:bg-white/20",
+              ? "bg-pink-400 text-primary-foreground"
+              : "scene-overlay hover:scene-overlay-muted",
           ].join(" ")}
         >
           {controller.isSpeaking() ? "Speaking" : "Silent"}
         </button>
       </div>
 
-      <p className="text-[11px] leading-relaxed text-white/40">
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
         Console:{" "}
-        <code className="text-sky-300">SPAC.trigger("attack")</code>,{" "}
-        <code className="text-sky-300">SPAC.walkLeft()</code>
+        <code className="text-muted-foreground">SPAC.trigger("attack")</code>,{" "}
+        <code className="text-muted-foreground">SPAC.walkLeft()</code>
       </p>
     </div>
   );
@@ -167,7 +167,7 @@ function WalkBtn({ name, label }: { name: string; label: string }) {
   return (
     <button
       onClick={() => controller.trigger(name)}
-      className="h-9 w-9 rounded-lg bg-white/5 text-white/80 transition hover:bg-white/15"
+      className="h-9 w-9 rounded-lg bg-muted/80 transition hover:bg-muted/80"
     >
       {label}
     </button>

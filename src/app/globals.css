@@ -55,7 +55,6 @@ body {
 
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  overflow: hidden;
 }
 
 :root {
@@ -137,4 +136,30 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* Play page — full-screen dark backdrop for the three.js canvas.
+   All visual styling lives here, not in component classes. */
+.scene-backdrop {
+  background: oklch(0.145 0 0);
+  color: oklch(0.985 0 0);
+}
+
+.scene-backdrop .scene-overlay {
+  background: oklch(0.145 0 0 / 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  color: oklch(0.985 0 0);
+}
+
+.scene-backdrop .scene-overlay-muted {
+  color: oklch(0.985 0 0 / 0.5);
+}
+
+.scene-backdrop .scene-accent {
+  color: oklch(0.6 0.2 250);
+}
+
+.scene-backdrop .scene-live-dot {
+  background: oklch(0.7 0.18 145);
 }

@@ -70,7 +70,7 @@ export function LiveKitSession() {
     <div className="pointer-events-auto flex flex-col items-end gap-1">
       <button
         onClick={() => connect().catch((e) => setErr(String(e)))}
-        className="rounded-full bg-sky-400 px-4 py-1.5 text-sm font-medium text-slate-900 transition hover:bg-sky-300"
+        className="rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
       >
         start call
       </button>
@@ -114,12 +114,12 @@ function ConnectedBadge({ onEnd }: { onEnd: () => void }) {
     void room.localParticipant.setCameraEnabled(true);
   }, [room]);
   return (
-    <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-md">
+    <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-border scene-overlay px-3 py-1.5">
       <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
-      <span className="text-xs text-white/80">live</span>
+      <span className="text-xs/80">live</span>
       <button
         onClick={() => onEnd()}
-        className="text-xs text-white/60 transition hover:text-white"
+        className="text-xs text-muted-foreground transition hover:text-foreground"
       >
         end
       </button>

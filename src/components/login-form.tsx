@@ -104,7 +104,7 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </Field>
-              {error && <p className="text-sm text-rose-400">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <Field>
                 <Button type="submit" disabled={loading}>
                   {loading ? "Signing in..." : "Login"}
