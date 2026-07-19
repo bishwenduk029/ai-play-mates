@@ -24,9 +24,14 @@ export default async function HomePage() {
           </Link>
           <nav className="flex items-center gap-2">
             {session ? (
-              <Link href="/play">
-                <Button size="sm">Play →</Button>
-              </Link>
+              <>
+                <Link href="/games">
+                  <Button size="sm" variant="ghost">Games</Button>
+                </Link>
+                <Link href="/play">
+                  <Button size="sm">Play →</Button>
+                </Link>
+              </>
             ) : (
               <>
                 <Link href="/login">
