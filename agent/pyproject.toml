@@ -5,7 +5,7 @@ description = "S-PAC vision agent — Gemini Live Vision that drives the three.j
 requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.28.1",
-    "livekit-agents[google,images]>=1.0.0",
+    "livekit-agents[google,images]==1.2.0",
     "python-dotenv>=1.0.0",
 ]
 

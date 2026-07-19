@@ -3,11 +3,18 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { Scene } from "@/components/Scene";
 import { ControlPanel } from "@/components/ControlPanel";
+import { DevControlPanel } from "@/components/DevControlPanel";
 import { LiveKitSession } from "@/components/LiveKitSession";
 import { SignOutButton } from "@/components/SignOutButton";
 
-export default async function PlayPage() {
+export default async function PlayPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ dev?: string }>;
+}) {
   const session = await auth.api.getSession({ headers: await headers() });
+  const { dev } = await searchParams;
+  const showDevPanel = dev === "1";
 
   if (!session) {
     redirect("/login");
@@ -18,7 +25,7 @@ export default async function PlayPage() {
       <Scene />
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-4 sm:p-6">
-        <ControlPanel />
+        {showDevPanel ? <DevControlPanel /> : <ControlPanel />}
       </div>
 
       <div className="pointer-events-none absolute left-4 top-4 sm:left-6 sm:top-6">
@@ -26,7 +33,7 @@ export default async function PlayPage() {
           AI Play Mates <span className="scene-accent">·</span> Play Companion
         </h1>
         <p className="scene-overlay-muted text-xs">
-          Hi {session.user.name}! three.js + livekit vision agent
+          Hi {session.user.name}!
         </p>
       </div>
 

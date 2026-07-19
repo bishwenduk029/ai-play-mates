@@ -8,7 +8,7 @@ import { JUNGLE_BLAST_CONFIG, type JungleBlastPoseInput } from "@/lib/games/jung
 /**
  * Jungle Blast — the wired-together game.
  *
- * Pipes MediaPipe pose data (punch/run) from usePosePunch into the Phaser
+ * Pipes MediaPipe pose data (kick/jump/run) from usePosePunch into the Phaser
  * game's registry every frame; the scene reads it in update(). Falls back to
  * keyboard (arrows + space) automatically when the camera is off.
  */
@@ -24,7 +24,8 @@ export function JungleBlastGame() {
       if (game) {
         const p = getPose();
         game.registry.set("pose", {
-          punch: p.punch,
+          kick: p.kick,
+          jump: p.jump,
           run: p.run,
         } satisfies JungleBlastPoseInput);
       }
@@ -54,13 +55,13 @@ export function JungleBlastGame() {
         />
         <span>
           {state.ready
-            ? state.error ?? "Punch (raise a hand) + run (lean) — or arrows + space"
+            ? state.error ?? "KICK (lift a foot) + JUMP (both feet up) + run (lean) — or space / up / arrows"
             : "Starting camera…"}
         </span>
       </div>
       <p className="max-w-md text-center text-xs text-muted-foreground">
-        The hero auto-walks through the jungle. Punch the air to blast charging
-        animals. Let one past the hero and you lose a life.
+        The hero auto-walks through the jungle. Kick to blast charging animals,
+        jump to ground-pound a crowd. Let one past the hero and you lose a life.
       </p>
     </div>
   );
