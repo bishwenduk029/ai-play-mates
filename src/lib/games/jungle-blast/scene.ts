@@ -73,6 +73,7 @@ export class JungleBlastScene extends Phaser.Scene {
   private elapsed = 0;
   private gameOver = false;
   private punchFlash = 0;
+  private heroTargetX = HERO_X;
 
   constructor() {
     super("jungle-blast");
@@ -150,13 +151,19 @@ export class JungleBlastScene extends Phaser.Scene {
     const punch = pose?.punch ?? 0;
 
     // --- Hero run (camera scrolls to fake forward motion + actual x shift) ---
-    const forward = SCROLL_SPEED + run * HERO_SPEED * 0.4;
-    const heroX = Phaser.Math.Clamp(
-      HERO_X + run * 60,
+    // Deadzone: ignore tiny run values (poses are noisy); ease toward target
+    // instead of snapping so the hero glides rather than jitters back and forth.
+    const RUN_DEADZONE = 0.25;
+    const clampedRun = Math.abs(run) < RUN_DEADZONE ? 0 : run;
+    const forward = SCROLL_SPEED + clampedRun * HERO_SPEED * 0.4;
+    this.heroTargetX = Phaser.Math.Clamp(
+      HERO_X + clampedRun * 60,
       HERO_X - 120,
       HERO_X + 140,
     );
-    this.hero.x = heroX;
+    // Ease the hero toward its target (~5x slower than a snap = smooth glide).
+    const ease = Math.min(1, delta * 8);
+    this.hero.x += (this.heroTargetX - this.hero.x) * ease;
     // Bobbing walk animation.
     this.hero.y = GROUND_Y + Math.sin(this.elapsed * 10) * 3;
     (this.hero.getAt(0) as Phaser.GameObjects.Rectangle).rotation = Math.sin(
@@ -292,7 +299,6 @@ export class JungleBlastScene extends Phaser.Scene {
 
   private endGame() {
     this.gameOver = true;
-    this.physics.world?.pause?.();
     const cx = GAME_W / 2;
     const cy = GAME_H / 2;
     const overlay = this.add.rectangle(cx, cy, GAME_W, GAME_H, 0x000000, 0.6);
@@ -359,6 +365,7 @@ export class JungleBlastScene extends Phaser.Scene {
     this.animals = [];
     this.trees = [];
     this.gameOverText = undefined;
+    this.heroTargetX = HERO_X;
   }
 }
 
