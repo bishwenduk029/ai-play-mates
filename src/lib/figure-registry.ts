@@ -15,12 +15,12 @@ export type ModelType = "glb" | "vrm" | "vrm-fbx" | "primitive";
 
 /** Common interface all figure renderers implement. */
 export interface FigureProps {
-  /** Public URL to the model file (GLB, VRM, or FBX). */
-  modelPath: string;
+  /** Public URL to the model file (GLB, VRM, FBX). Optional for primitives. */
+  modelPath?: string;
   /** Root Y position so feet rest on the ground. */
   baseY: number;
-  /** Action set from the character manifest. */
-  actions: CharacterAction[];
+  /** Action set from the character manifest. Optional for primitives. */
+  actions?: CharacterAction[];
   /** For vrm-fbx: the FBX animation file to retarget onto the VRM rig. */
   animationPath?: string;
 }

@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@livekit/components-react": "^2.9.23",
-    "@pixiv/three-vrm": "^3.5.5",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "livekit-client": "^2.20.1",
