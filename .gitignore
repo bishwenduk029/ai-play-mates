@@ -68,3 +68,5 @@ drizzle/
 .claude-code/
 *.skills-lock.json
 skills-lock.json
+AGENTS.md
+CLAUDE.md
