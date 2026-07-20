@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Logo } from "@/components/Logo";
 
 /**
  * Landing page — AI Play Zone.
@@ -17,11 +18,8 @@ export default async function HomePage() {
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <span className="text-xs font-bold">PZ</span>
-            </div>
-            AI Play Zone
+          <Link href="/">
+            <Logo />
           </Link>
           <nav className="flex items-center gap-2">
             {session ? (

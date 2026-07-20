@@ -34,7 +34,7 @@ export default async function GamePage({
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
           <Link href="/games" className="flex items-center gap-2 font-semibold">
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <span className="text-xs font-bold">APM</span>
+              <span className="text-xs font-bold">PZ</span>
             </div>
             AI Play Zone
           </Link>

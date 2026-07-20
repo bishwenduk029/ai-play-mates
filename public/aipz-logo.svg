@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <style>
+    .arcade { font-family: 'Courier New', monospace; font-weight: bold; font-size: 22px; }
+    .glow-p { fill: #ff6b35; }
+    .glow-z { fill: #00d9ff; }
+    .ai { fill: #6366f1; font-size: 14px; }
+  </style>
+  <!-- "Ai" in smaller purple -->
+  <text x="2" y="24" class="arcade ai">Ai</text>
+  <!-- "P" in orange arcade style with pixelated edges -->
+  <text x="20" y="28" class="arcade glow-p" style="letter-spacing: 2px">P</text>
+  <!-- "Z" in cyan arcade style -->
+  <text x="38" y="28" class="arcade glow-z" style="letter-spacing: 2px">Z</text>
+  <!-- Subtle scanline effect -->
+  <rect x="18" y="8" width="28" height="2" fill="#ff6b35" opacity="0.3"/>
+  <rect x="18" y="30" width="28" height="2" fill="#00d9ff" opacity="0.3"/>
+</svg>
