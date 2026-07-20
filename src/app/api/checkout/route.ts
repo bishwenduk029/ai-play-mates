@@ -7,13 +7,14 @@ import { headers } from "next/headers";
  * Dodo Payments hosted checkout (OOB redirect — no custom checkout UI).
  *
  * GET  /api/checkout              → redirect to Dodo's hosted checkout for the
- *                                   subscription product, pre-filled with the
- *                                   logged-in user's email. Returns to /play.
+ *                                   subscription product (read from
+ *                                   DODO_PAYMENTS_PRODUCT_ID env), pre-filled
+ *                                   with the logged-in user's email. Returns
+ *                                   to /play.
  * GET  /api/checkout?productId=X  → same, with an explicit product override.
  *
  * The product ID comes from DODO_PAYMENTS_PRODUCT_ID (set in the Dodo dashboard
- * → Products). If missing, returns a 500 with a clear message — there is no
- * sensible default.
+ * → Products). If missing, returns a 500 with a clear message.
  *
  * The customer email is read from the current better-auth session so the
  * subscription lands on the right Dodo customer (and the webhook can
@@ -23,7 +24,7 @@ import { headers } from "next/headers";
  */
 
 const env = (process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") || "test_mode";
-const returnUrl = process.env.DODO_PAYMENTS_RETURN_URL || "https://ai-play-zone.vercel.app/play";
+const returnUrl = process.env.DODO_PAYMENTS_RETURN_URL || "https://ai-play-mates.vercel.app/play";
 
 // Base handler config shared by GET/POST.
 function baseConfig() {
@@ -34,8 +35,29 @@ function baseConfig() {
   };
 }
 
-// Static redirect checkout (simplest — just visit /api/checkout).
-export const GET = Checkout(baseConfig());
+// The OOB Dodo Checkout handler — expects ?productId= in the query string.
+const dodoCheckout = Checkout(baseConfig());
+
+/**
+ * GET: if no ?productId= query param, redirect to the same path with the
+ * product ID from DODO_PAYMENTS_PRODUCT_ID, then hand off to the OOB handler.
+ * This lets the UI link to plain /api/checkout without knowing the product ID.
+ */
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  if (!url.searchParams.has("productId")) {
+    const productId = process.env.DODO_PAYMENTS_PRODUCT_ID;
+    if (!productId) {
+      return NextResponse.json(
+        { error: "DODO_PAYMENTS_PRODUCT_ID is not set. Create a product in the Dodo dashboard." },
+        { status: 500 },
+      );
+    }
+    url.searchParams.set("productId", productId);
+    return NextResponse.redirect(url);
+  }
+  return dodoCheckout(req);
+}
 
 // Dynamic checkout: injects the logged-in user's email + the product ID so the
 // Dodo checkout is pre-filled and the subscription reconciles to the local user.
