@@ -90,6 +90,7 @@ export const verification = sqliteTable(
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  subscriptions: many(subscription),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -102,6 +103,47 @@ export const sessionRelations = relations(session, ({ one }) => ({
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
+    references: [user.id],
+  }),
+}));
+
+/**
+ * Dodo Payments subscription state, mirrored from webhooks.
+ * One row per user (latest status). The webhook upserts by dodoSubscriptionId.
+ * This is the single source of truth for "is this user premium?" — read it
+ * to gate premium content, never the user.image hack.
+ */
+export const subscription = sqliteTable(
+  "subscription",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    // Dodo identifiers — let us reconcile webhook events to the local user
+    // even if their email later changes.
+    dodoCustomerId: text("dodo_customer_id").notNull(),
+    dodoSubscriptionId: text("dodo_subscription_id").notNull().unique(),
+    productId: text("product_id"),
+    // active | on_hold | failed | cancelled | expired | paused
+    status: text("status").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("subscription_userId_idx").on(table.userId),
+    index("subscription_status_idx").on(table.status),
+  ],
+);
+
+export const subscriptionRelations = relations(subscription, ({ one }) => ({
+  user: one(user, {
+    fields: [subscription.userId],
     references: [user.id],
   }),
 }));

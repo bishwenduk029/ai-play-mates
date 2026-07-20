@@ -1,29 +1,32 @@
 import { Webhooks } from "@dodopayments/nextjs";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { user } from "@/db/auth-schema";
 
-// Webhook handler for Dodo Payments subscription events.
-// Events: subscription.active, subscription.renewed, subscription.on_hold,
-//         subscription.failed, payment.succeeded, payment.failed
-export const POST = Webhooks({
-  webhookKey: process.env.DODO_PAYMENTS_WEBHOOK_KEY!,
-  onPayload: async (event) => {
-    console.log("[Dodo] event:", event.type);
-  },
-  onSubscriptionActive: async (event) => {
-    await updateSubscriptionStatus(event.data.customer.email, "active");
-  },
-  onSubscriptionRenewed: async (event) => {
-    await updateSubscriptionStatus(event.data.customer.email, "active");
-  },
-  onSubscriptionOnHold: async (event) => {
-    await updateSubscriptionStatus(event.data.customer.email, "on_hold");
-  },
-  onSubscriptionFailed: async (event) => {
-    await updateSubscriptionStatus(event.data.customer.email, "failed");
-  },
-});
+const webhookKey = process.env.DODO_PAYMENTS_WEBHOOK_KEY;
+
+// Guard: if webhook key isn't set, return 503 instead of crashing at build.
+export const POST = webhookKey
+  ? Webhooks({
+      webhookKey,
+      onPayload: async (event) => {
+        console.log("[Dodo] event:", event.type);
+      },
+      onSubscriptionActive: async (event) => {
+        await updateSubscriptionStatus(event.data.customer.email, "active");
+      },
+      onSubscriptionRenewed: async (event) => {
+        await updateSubscriptionStatus(event.data.customer.email, "active");
+      },
+      onSubscriptionOnHold: async (event) => {
+        await updateSubscriptionStatus(event.data.customer.email, "on_hold");
+      },
+      onSubscriptionFailed: async (event) => {
+        await updateSubscriptionStatus(event.data.customer.email, "failed");
+      },
+    })
+  : async () => NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
 
 async function updateSubscriptionStatus(email: string, status: string) {
   try {

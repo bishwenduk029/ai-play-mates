@@ -1,7 +1,9 @@
 import { CustomerPortal } from "@dodopayments/nextjs";
+import { NextResponse } from "next/server";
 
-// GET → redirect to Dodo customer portal (manage subscription, update card)
-export const GET = CustomerPortal({
-  bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
-  environment: (process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") || "test_mode",
-});
+const bearerToken = process.env.DODO_PAYMENTS_API_KEY;
+const environment = (process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") || "test_mode";
+
+export const GET = bearerToken
+  ? CustomerPortal({ bearerToken, environment })
+  : async () => NextResponse.json({ error: "Payments not configured" }, { status: 503 });
