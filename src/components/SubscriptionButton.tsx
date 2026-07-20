@@ -4,16 +4,16 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Subscription button — shows "Upgrade" (links to Dodo hosted checkout) or
- * "Manage subscription" (links to Dodo customer portal) depending on whether
- * the user is premium. Pure shadcn; no custom checkout UI.
+ * Subscription button — shows "Upgrade" (creates a Dodo checkout session and
+ * redirects to it) or "Manage subscription" (links to the Dodo customer
+ * portal) depending on whether the user is premium. Pure shadcn.
  *
- * Fetches status from /api/subscription/status (server reads the DB). On error
- * or while loading, shows the Upgrade CTA (safe default — clicking it either
- * starts checkout or, if already premium, Dodo's page handles it).
+ * The Upgrade click calls POST /api/checkout, which returns { url }; we then
+ * window.location to it (the redirect to Dodo's hosted checkout page).
  */
 export function SubscriptionButton({ size = "sm" }: { size?: "sm" | "lg" }) {
   const [premium, setPremium] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,6 +30,21 @@ export function SubscriptionButton({ size = "sm" }: { size?: "sm" | "lg" }) {
     };
   }, []);
 
+  async function startCheckout() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", { method: "POST" });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch {
+      // fall through to reload
+    }
+    setLoading(false);
+  }
+
   if (premium) {
     return (
       <a href="/api/customer-portal">
@@ -41,8 +56,8 @@ export function SubscriptionButton({ size = "sm" }: { size?: "sm" | "lg" }) {
   }
 
   return (
-    <a href="/api/checkout">
-      <Button size={size}>Upgrade · $1/mo</Button>
-    </a>
+    <Button size={size} onClick={startCheckout} disabled={loading}>
+      {loading ? "Redirecting…" : "Upgrade · $1/mo"}
+    </Button>
   );
 }
