@@ -75,3 +75,5 @@ CLAUDE.md
 # Local asset library (source packs we copy FROM, not deploy). Keep on disk,
 # never commit, never ship to Vercel.
 assets/
+DODO_PAYMENTS_API_KEY
+DODO_PAYMENTS_WEBHOOK_KEY

@@ -30,7 +30,7 @@ export default async function PlayPage({
 
       <div className="pointer-events-none absolute left-4 top-4 sm:left-6 sm:top-6">
         <h1 className="text-lg font-semibold">
-          AI Play Mates <span className="scene-accent">·</span> Play Companion
+          AI Play Zone <span className="scene-accent">·</span> Play Companion
         </h1>
         <p className="scene-overlay-muted text-xs">
           Hi {session.user.name}!

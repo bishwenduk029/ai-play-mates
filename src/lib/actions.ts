@@ -1,4 +1,4 @@
-// AI Play Mates action controller — single source of truth for the active character
+// AI Play Zone action controller — single source of truth for the active character
 // and its current motion.
 //
 // Characters are pure data (see /public/characters/<id>/manifest.json). The

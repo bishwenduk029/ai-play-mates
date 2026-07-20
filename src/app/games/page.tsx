@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const metadata = { title: "Games · AI Play Mates" };
+export const metadata = { title: "Games · AI Play Zone" };
 
 const GAMES = [
   {
@@ -33,7 +33,7 @@ export default async function GamesHubPage() {
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <span className="text-xs font-bold">APM</span>
             </div>
-            AI Play Mates
+            AI Play Zone
           </Link>
           <nav className="flex items-center gap-2">
             <Link href="/play">

@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
 import { JungleBlastGame } from "@/components/games/JungleBlastGame";
 
-export const metadata = { title: "Jungle Blast · AI Play Mates" };
+export const metadata = { title: "Jungle Blast · AI Play Zone" };
 
 const TITLES: Record<string, string> = {
   "jungle-blast": "Jungle Blast",
@@ -36,7 +36,7 @@ export default async function GamePage({
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <span className="text-xs font-bold">APM</span>
             </div>
-            AI Play Mates
+            AI Play Zone
           </Link>
           <Link href="/games">
             <Button size="sm" variant="ghost">← All games</Button>

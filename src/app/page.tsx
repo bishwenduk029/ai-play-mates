@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 /**
- * Landing page — public home page with header + bento grid.
- * Default shadcn light theme. All styling via shadcn tokens.
+ * Landing page — AI Play Zone.
+ * Kid-friendly, parent-trustworthy, shareable on social.
+ * No technical jargon, no scary "it sees your kid" language.
  */
 export default async function HomePage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -18,27 +19,22 @@ export default async function HomePage() {
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <span className="text-xs font-bold">APM</span>
+              <span className="text-xs font-bold">PZ</span>
             </div>
-            AI Play Mates
+            AI Play Zone
           </Link>
           <nav className="flex items-center gap-2">
             {session ? (
-              <>
-                <Link href="/games">
-                  <Button size="sm" variant="ghost">Games</Button>
-                </Link>
-                <Link href="/play">
-                  <Button size="sm">Play →</Button>
-                </Link>
-              </>
+              <Link href="/play">
+                <Button size="sm">Play →</Button>
+              </Link>
             ) : (
               <>
                 <Link href="/login">
                   <Button size="sm" variant="ghost">Sign in</Button>
                 </Link>
                 <Link href="/signup">
-                  <Button size="sm">Get started</Button>
+                  <Button size="sm">Start free</Button>
                 </Link>
               </>
             )}
@@ -52,18 +48,16 @@ export default async function HomePage() {
         <section className="mb-20 flex flex-col items-center text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs text-muted-foreground">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-            AI-powered play companion for kids
+            Where play comes alive
           </div>
 
           <h1 className="mb-4 text-5xl font-bold tracking-tight sm:text-6xl">
-            AI Play Mates
+            AI Play Zone
           </h1>
-          <p className="mb-2 text-xl text-muted-foreground">
-            AI Play Mates for kids
-          </p>
           <p className="mb-8 max-w-xl text-base text-muted-foreground">
-            An AI companion that sees your child, talks to them, and brings a 3D
-            character to life through play. Jump, wave, dance — together.
+            Magical characters that talk, move, and play with your child.
+            They jump, the character jumps. They wave, the character waves.
+            A new kind of playtime — active, silly, and screen-free in spirit.
           </p>
 
           <div className="flex flex-col items-center gap-3 sm:flex-row">
@@ -74,7 +68,7 @@ export default async function HomePage() {
             ) : (
               <>
                 <Link href="/signup">
-                  <Button size="lg">Get started free</Button>
+                  <Button size="lg">Start playing free</Button>
                 </Link>
                 <Link href="/login">
                   <Button size="lg" variant="ghost">
@@ -84,51 +78,56 @@ export default async function HomePage() {
               </>
             )}
           </div>
+
+          <p className="mt-4 text-sm text-muted-foreground">
+            Free to try · $1/month for premium characters · Cancel anytime
+          </p>
         </section>
 
         {/* Bento grid */}
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {/* Large card — spans 2 cols, 2 rows on desktop */}
+          {/* Large card */}
           <Card className="md:col-span-2 md:row-span-2 flex flex-col">
             <CardHeader>
-              <div className="mb-2 text-4xl">👀</div>
-              <CardTitle className="text-2xl">Sees your kid</CardTitle>
-              <CardDescription>Live webcam vision powered by Gemini</CardDescription>
+              <div className="mb-2 text-4xl">🐰</div>
+              <CardTitle className="text-2xl">Characters that play back</CardTitle>
+              <CardDescription>Talk, move, and giggle together</CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
               <p className="text-sm text-muted-foreground">
-                The AI agent watches your child through their webcam and reacts
-                in real time. Wave, and it waves back. Jump, and it jumps. The
-                companion responds to what it sees — no controllers needed.
+                Each character has its own personality and moves. Your child
+                talks to them, and they talk back. They wave, and the character
+                waves. It's like a friend who lives in the screen — one who
+                never gets tired of playing.
               </p>
             </CardContent>
           </Card>
 
-          {/* Tall card — spans 2 rows */}
+          {/* Tall card */}
           <Card className="md:row-span-2 flex flex-col">
             <CardHeader>
-              <div className="mb-2 text-4xl">🎙️</div>
-              <CardTitle>Voice + motion</CardTitle>
+              <div className="mb-2 text-4xl">🎉</div>
+              <CardTitle>Arcade games</CardTitle>
             </CardHeader>
             <CardContent className="flex-1">
               <p className="text-sm text-muted-foreground">
-                The agent talks to your child and drives the 3D figure through
-                natural, playful conversation.
+                Jump, duck, and dodge in simple motion-powered mini-games.
+                No controller needed — just your child's body.
               </p>
             </CardContent>
           </Card>
 
-          {/* Wide card — spans 2 cols */}
+          {/* Wide card */}
           <Card className="md:col-span-2">
             <CardHeader>
-              <div className="mb-2 text-4xl">🐰</div>
-              <CardTitle>3D characters with real moves</CardTitle>
-              <CardDescription>Bunny, creature, and more</CardDescription>
+              <div className="mb-2 text-4xl">🧡</div>
+              <CardTitle>Screen time you'll feel good about</CardTitle>
+              <CardDescription>Active, not passive</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Each character has its own action set — jump, wave, dance,
-                attack, roar. Upload your own rigged GLB to create new characters.
+                Instead of watching, your child moves, talks, and laughs.
+                Playtime that burns energy and sparks imagination.
               </p>
             </CardContent>
           </Card>
@@ -137,11 +136,11 @@ export default async function HomePage() {
           <Card>
             <CardHeader>
               <div className="mb-2 text-4xl">🔒</div>
-              <CardTitle>Safe &amp; simple</CardTitle>
+              <CardTitle>Parent-safe</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Email login, no data leaves your device.
+                Email login. No ads. Cancel anytime.
               </p>
             </CardContent>
           </Card>
@@ -150,7 +149,7 @@ export default async function HomePage() {
         {/* Footer */}
         <footer className="mt-20 border-t pt-8 text-center">
           <p className="text-xs text-muted-foreground">
-            Built with Next.js, three.js, LiveKit, and Gemini Live.
+            AI Play Zone · Built with love for little ones.
           </p>
         </footer>
       </main>

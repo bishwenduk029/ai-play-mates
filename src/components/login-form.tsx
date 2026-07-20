@@ -52,7 +52,7 @@ export function LoginForm({
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
           <CardDescription>
-            Sign in to play with AI Play Mates
+            Sign in to play with AI Play Zone
           </CardDescription>
         </CardHeader>
         <CardContent>

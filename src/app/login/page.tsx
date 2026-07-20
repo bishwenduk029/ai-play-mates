@@ -11,7 +11,7 @@ export default function LoginPage() {
           <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <span className="text-xs font-bold">APM</span>
           </div>
-          AI Play Mates
+          AI Play Zone
         </Link>
         <LoginForm />
       </div>
