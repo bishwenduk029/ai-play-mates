@@ -57,7 +57,7 @@ export class JungleBlastScene extends Phaser.Scene {
   private hero!: Phaser.GameObjects.Sprite;
   private heroState: HeroState = "walk";
   private trees: Tree[] = [];
-  private forestBg!: Phaser.GameObjects.Image;
+  private forestBg!: Phaser.GameObjects.TileSprite;
   private animals: Animal[] = [];
   private ground!: Phaser.GameObjects.Rectangle;
   private scoreText!: Phaser.GameObjects.Text;
@@ -118,8 +118,17 @@ export class JungleBlastScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // --- Far parallax: real forest photo, scrolls slowest ---
-    this.forestBg = this.add.image(width / 2, height / 2, "forest");
+    // Use a TileSprite (not Image) so it tiles seamlessly and never exposes the
+    // sky-colour background as a growing gap when it scrolls. Image is 2048x1152;
+    // tile it across the canvas at canvas height, then scroll its texture offset.
     const bgScale = height / 1152;
+    this.forestBg = this.add.tileSprite(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      "forest",
+    );
     this.forestBg.setScale(bgScale).setScrollFactor(0).setDepth(-1);
     this.forestBg.setAlpha(0.85);
 
@@ -250,11 +259,9 @@ export class JungleBlastScene extends Phaser.Scene {
     }
 
     // --- Parallax scroll ---
-    this.forestBg.x -= forward * 0.1 * delta;
-    const halfScaled = this.forestBg.displayWidth / 2;
-    if (this.forestBg.x < GAME_W / 2 - halfScaled) {
-      this.forestBg.x = GAME_W / 2;
-    }
+    // TileSprite: scroll the texture (tilePositionX) rather than moving the
+    // object, so it stays full-canvas and never gaps.
+    this.forestBg.tilePositionX -= forward * 0.1 * delta;
     for (const tree of this.trees) {
       tree.go.x -= forward * tree.speed * delta;
       if (tree.go.x < -120) tree.go.x += GAME_W + 240;
@@ -430,7 +437,15 @@ export class JungleBlastScene extends Phaser.Scene {
     this.input.once("pointerdown", () => this.scene.restart());
   }
 
-  private makeTreeLayer(color: number, speed: number, minH: number, maxH: number): Tree[] {
+  private makeTreeLayer(
+    canopyColor: number,
+    speed: number,
+    minH: number,
+    maxH: number,
+  ): Tree[] {
+    // Trunk brown — darker for nearer layers (higher speed) so depth reads.
+    // Far (0.25) is hazy/light; near (0.85) is dark/saturated.
+    const trunkColor = speed < 0.4 ? 0x5b4636 : speed < 0.7 ? 0x4a3826 : 0x3a2a1a;
     const trees: Tree[] = [];
     const count = 5;
     for (let i = 0; i < count; i++) {
@@ -438,8 +453,13 @@ export class JungleBlastScene extends Phaser.Scene {
       const w = Phaser.Math.Between(40, 70);
       const x = (GAME_W / count) * i + Phaser.Math.Between(-30, 30);
       const g = this.add.graphics();
-      g.fillStyle(color, 1);
-      g.fillRect(x - 4, GROUND_Y - h * 0.4, 8, h * 0.4);
+      // Trunk (brown) — wider than before so it reads as wood, not a stick.
+      const trunkW = Phaser.Math.Between(8, 14);
+      g.fillStyle(trunkColor, 1);
+      g.fillRect(x - trunkW / 2, GROUND_Y - h * 0.45, trunkW, h * 0.45);
+      // Canopy (green) — overlapping circles, drawn AFTER the trunk so it sits
+      // on top and the trunk peeks out below.
+      g.fillStyle(canopyColor, 1);
       for (let c = 0; c < 4; c++) {
         g.fillCircle(
           x + Phaser.Math.Between(-w / 2, w / 2),
