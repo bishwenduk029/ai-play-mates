@@ -4,7 +4,7 @@
 
 import { db } from "@/lib/auth";
 import { subscription, user } from "@/db/auth-schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 /** Subscription statuses Dodo sends that grant premium access. */
 const ACTIVE_STATUSES = new Set(["active", "renewed"]);

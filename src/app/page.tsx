@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/Logo";
+import { SubscriptionButton } from "@/components/SubscriptionButton";
 
 /**
  * Landing page — AI Play Zone.
@@ -60,9 +61,12 @@ export default async function HomePage() {
 
           <div className="flex flex-col items-center gap-3 sm:flex-row">
             {session ? (
-              <Link href="/play">
-                <Button size="lg">Play now →</Button>
-              </Link>
+              <>
+                <SubscriptionButton size="lg" />
+                <Link href="/play">
+                  <Button size="lg">Play now →</Button>
+                </Link>
+              </>
             ) : (
               <>
                 <Link href="/signup">
@@ -95,7 +99,7 @@ export default async function HomePage() {
               <p className="text-sm text-muted-foreground">
                 Each character has its own personality and moves. Your child
                 talks to them, and they talk back. They wave, and the character
-                waves. It's like a friend who lives in the screen — one who
+                waves. It&apos;s like a friend who lives in the screen — one who
                 never gets tired of playing.
               </p>
             </CardContent>
@@ -110,7 +114,7 @@ export default async function HomePage() {
             <CardContent className="flex-1">
               <p className="text-sm text-muted-foreground">
                 Jump, duck, and dodge in simple motion-powered mini-games.
-                No controller needed — just your child's body.
+                No controller needed — just your child&apos;s body.
               </p>
             </CardContent>
           </Card>
@@ -119,7 +123,7 @@ export default async function HomePage() {
           <Card className="md:col-span-2">
             <CardHeader>
               <div className="mb-2 text-4xl">🧡</div>
-              <CardTitle>Screen time you'll feel good about</CardTitle>
+              <CardTitle>Screen time you&apos;ll feel good about</CardTitle>
               <CardDescription>Active, not passive</CardDescription>
             </CardHeader>
             <CardContent>

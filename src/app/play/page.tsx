@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { SignOutButton } from "@/components/SignOutButton";
+import { SubscriptionButton } from "@/components/SubscriptionButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -40,6 +41,7 @@ export default async function PlayHubPage({
             <span className="hidden text-sm text-muted-foreground sm:inline">
               Hi {session.user.name}
             </span>
+            <SubscriptionButton size="sm" />
             <SignOutButton />
           </div>
         </div>
