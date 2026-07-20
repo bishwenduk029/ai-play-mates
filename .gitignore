@@ -71,3 +71,7 @@ local.db
 skills-lock.json
 AGENTS.md
 CLAUDE.md
+
+# Local asset library (source packs we copy FROM, not deploy). Keep on disk,
+# never commit, never ship to Vercel.
+assets/
