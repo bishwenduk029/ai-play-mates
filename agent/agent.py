@@ -23,7 +23,6 @@ from typing import Any
 
 import httpx
 from dotenv import load_dotenv
-from google.genai import types
 from livekit.agents import (
     Agent,
     AgentSession,
@@ -174,9 +173,6 @@ async def entrypoint(ctx: JobContext) -> None:
     session = AgentSession(
         llm=RealtimeModel(
             model="gemini-3.1-flash-live-preview",
-            thinking_config=types.ThinkingConfig(
-                include_thoughts=False,
-            ),
             voice="Puck",
         ),
     )
