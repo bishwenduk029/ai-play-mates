@@ -27,22 +27,22 @@ from google.genai import types
 from livekit.agents import (
     Agent,
     AgentSession,
-    AgentServer,
     JobContext,
     RunContext,
+    RoomInputOptions,
+    WorkerOptions,
     cli,
     function_tool,
     get_job_context,
-    room_io,
 )
 from livekit.plugins import google
+from livekit.plugins.google.beta.realtime import RealtimeModel
 
 load_dotenv(".env.local")
 
 logger = logging.getLogger("spac-agent")
 logger.setLevel(logging.INFO)
 
-server = AgentServer()
 AGENT_NAME = "spac"
 # Next.js app base URL used to fetch character manifests.
 SPAC_APP_URL = os.getenv("SPAC_APP_URL", "http://localhost:3000").rstrip("/")
@@ -135,7 +135,6 @@ def _make_action_tool(name: str, description: str):
     return _tool
 
 
-@server.rtc_session(agent_name=AGENT_NAME)
 async def entrypoint(ctx: JobContext) -> None:
     ctx.log_context_fields = {"room": ctx.room.name}
 
@@ -173,7 +172,7 @@ async def entrypoint(ctx: JobContext) -> None:
     agent = Agent(instructions=instructions, tools=tools)
 
     session = AgentSession(
-        llm=google.realtime.RealtimeModel(
+        llm=RealtimeModel(
             model="gemini-3.1-flash-live-preview",
             thinking_config=types.ThinkingConfig(
                 include_thoughts=False,
@@ -183,13 +182,12 @@ async def entrypoint(ctx: JobContext) -> None:
     )
 
     await session.start(
-        room=ctx.room,
         agent=agent,
-        room_options=room_io.RoomOptions(video_input=True),
+        room=ctx.room,
+        room_input_options=RoomInputOptions(video_enabled=True),
     )
-    await ctx.connect()
     await session.generate_reply()
 
 
 if __name__ == "__main__":
-    cli.run_app(server)
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, agent_name=AGENT_NAME))

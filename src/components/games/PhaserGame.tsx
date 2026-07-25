@@ -57,26 +57,14 @@ export function PhaserGame({
   useEffect(() => {
     function onFsChange() {
       const el = containerRef.current;
-      const inFs = !!(el && document.fullscreenElement === el);
-      setIsFullscreen(inFs);
-      // The parent just changed size — re-fit the canvas to it.
+      setIsFullscreen(!!(el && document.fullscreenElement === el));
+      // The parent just changed size — re-fit the canvas to it so a 16:9
+      // game fills the screen. (We deliberately do NOT force a landscape
+      // orientation lock here: on Chrome Android, locking orientation
+      // breaks the camera <video> feed / MediaPipe detection for our
+      // motion-controlled games. The user rotates the phone manually;
+      // Phaser's FIT mode handles any aspect ratio.)
       gameRef.current?.scale.refresh();
-      // On phones, expand should ROTATE to landscape (like a video player):
-      // the games are 16:9, so a portrait fullscreen would letterbox into a
-      // small strip in the middle. Best-effort — unsupported browsers throw.
-      // (`lock` is missing from this TS lib's ScreenOrientation — narrow it.)
-      const orient = screen.orientation as ScreenOrientation & {
-        lock?: (orientation: "landscape" | "portrait") => Promise<void>;
-      };
-      if (inFs) {
-        void orient
-          .lock?.("landscape")
-          .catch(() => {
-            // Orientation lock unsupported (e.g. iOS Safari) — ignore.
-          });
-      } else {
-        orient.unlock();
-      }
     }
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
