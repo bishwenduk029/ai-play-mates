@@ -10,8 +10,10 @@ import { GestureRecognizer, FilesetResolver } from "@mediapipe/tasks-vision";
  * CALIBRATION (the intro handshake):
  *   The kid must make a CLOSED FIST with BOTH hands ("grab both handles").
  *   Once both fists are seen, controls ALIGN, a baseline hand position is
- *   captured, and play begins. If both hands disappear for >1s, controls
- *   disengage and the kid must re-grab to resume.
+ *   captured, and play begins. Alignment is STICKY: losing a hand (common
+ *   when banking moves a fist near the frame edge) just zeroes the steering
+ *   momentarily — it does NOT force re-calibration. Controls only disengage
+ *   if BOTH hands are gone for >DISENGAGE_MS (the kid walked away).
  *
  * GESTURES (once aligned):
  *   - Move both fists LEFT/RIGHT  → bank left/right (horizon rolls).
@@ -69,7 +71,7 @@ const BANK_DEADZONE = 0.03;
 const CLIMB_DEADZONE = 0.03;
 
 const FIRE_COOLDOWN_MS = 350;
-const DISENGAGE_MS = 1000; // both hands lost this long → re-calibrate
+const DISENGAGE_MS = 2500; // BOTH hands lost this long → re-calibrate (kid walked away)
 
 /** Touch input set externally by on-screen controls (mobile). */
 interface TouchInput {
@@ -276,8 +278,9 @@ export function useFlightYoke(enabled: boolean) {
 
       const now = performance.now();
 
-      // ALIGNMENT: require both hands fisted to lock. Once locked, stay locked
-      // until both hands vanish for DISENGAGE_MS.
+      // ALIGNMENT: require both hands fisted to lock. Once locked, STAY locked
+      // — losing one hand (common while banking) must NOT re-calibrate. Only
+      // disengage when BOTH hands are gone for DISENGAGE_MS (kid walked away).
       if (!alignedRef.current) {
         if (handsSeen >= 2 && fistsClosed >= 2) {
           // Capture baseline from the two wrists (average). Mirrored selfie
@@ -289,25 +292,28 @@ export function useFlightYoke(enabled: boolean) {
           alignedRef.current = true;
           handsLostSinceRef.current = null;
         }
-      } else {
-        if (handsSeen >= 2) {
-          handsLostSinceRef.current = null;
-        } else {
-          if (handsLostSinceRef.current == null) handsLostSinceRef.current = now;
-          if (now - handsLostSinceRef.current > DISENGAGE_MS) {
-            alignedRef.current = false;
-            baselineXRef.current = null;
-            baselineYRef.current = null;
-          }
+      } else if (handsSeen === 0) {
+        // Both hands gone — start the walk-away timer. A single visible hand
+        // keeps the session alive (steering just zeros until both return).
+        if (handsLostSinceRef.current == null) handsLostSinceRef.current = now;
+        if (now - handsLostSinceRef.current > DISENGAGE_MS) {
+          alignedRef.current = false;
+          baselineXRef.current = null;
+          baselineYRef.current = null;
         }
+      } else {
+        // ≥1 hand visible — we're still here. Reset the walk-away timer.
+        handsLostSinceRef.current = null;
       }
 
       let bank = 0;
       let climb = 0;
       let fire = 0;
 
-      if (alignedRef.current && handsSeen >= 1 && baselineXRef.current != null && baselineYRef.current != null) {
-        // Average wrist position of all visible hands.
+      if (alignedRef.current && handsSeen >= 2 && baselineXRef.current != null && baselineYRef.current != null) {
+        // Require BOTH hands for steering so a dropped hand can't yank the
+        // average and spike the plane. If one hand is briefly lost, steering
+        // zeros (plane levels) until both return — no re-calibration.
         const xs = lm.map((h) => h[WRIST].x);
         const ys = lm.map((h) => h[WRIST].y);
         const avgX = xs.reduce((a, b) => a + b, 0) / xs.length;
