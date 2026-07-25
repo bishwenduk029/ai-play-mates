@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type Phaser from "phaser";
 
 /**
@@ -10,6 +12,10 @@ import type Phaser from "phaser";
  *
  * The caller passes the game config + a per-frame updater that can push
  * external state (e.g. pose data) into the game via `game.registry`.
+ *
+ * An "expand" button toggles true browser fullscreen on the game container;
+ * Phaser's Scale.FIT mode auto-rescales the canvas to fill the screen. This
+ * is game-agnostic — any game rendered through this host gets it for free.
  */
 export function PhaserGame({
   config,
@@ -22,6 +28,7 @@ export function PhaserGame({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     let game: Phaser.Game | null = null;
@@ -44,5 +51,50 @@ export function PhaserGame({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div ref={containerRef} id={String(config.parent)} className={className} />;
+  // Track the browser fullscreen state so the button icon flips correctly
+  // (covers ESC exit, which doesn't go through our toggle).
+  useEffect(() => {
+    function onFsChange() {
+      const el = containerRef.current;
+      setIsFullscreen(!!(el && document.fullscreenElement === el));
+    }
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  function toggleFullscreen() {
+    const el = containerRef.current;
+    if (!el) return;
+    if (document.fullscreenElement === el) {
+      void document.exitFullscreen();
+    } else {
+      void el.requestFullscreen().catch(() => {
+        // Some browsers reject without a user gesture; the click is one, so
+        // this rarely fires. Ignore silently if it does.
+      });
+    }
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      id={String(config.parent)}
+      className={[
+        "relative bg-background",
+        isFullscreen ? "h-screen w-screen" : className,
+      ].join(" ")}
+    >
+      <Button
+        type="button"
+        size="icon"
+        variant="secondary"
+        onClick={toggleFullscreen}
+        aria-label={isFullscreen ? "Exit fullscreen" : "Expand to fullscreen"}
+        title={isFullscreen ? "Exit fullscreen" : "Expand"}
+        className="absolute right-2 top-2 z-50 size-8 bg-background/80 backdrop-blur"
+      >
+        {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+      </Button>
+    </div>
+  );
 }

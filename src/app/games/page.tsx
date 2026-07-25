@@ -16,6 +16,14 @@ const GAMES = [
     emoji: "🌴",
     tag: "MediaPipe Pose",
   },
+  {
+    slug: "sky-strike",
+    title: "Sky Strike",
+    description:
+      "Cockpit POV dogfight. Grab an invisible flight yoke with both fists, bank and climb to dodge bandits, and thumb to fire. Your hands are the joystick.",
+    emoji: "✈️",
+    tag: "MediaPipe Hands",
+  },
 ] as const;
 
 /**

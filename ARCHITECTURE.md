@@ -196,3 +196,145 @@ Open http://localhost:3000, pick a character, click "start call".
 4. Read `agent/agent.py` for the agent side.
 5. Check the two Herdr panes (`s-pac dev`, `s-pac agent`) — both should be running.
 6. The "Known issues" section above is the current TODO.
+
+---
+
+# Games (motion-controlled arcade)
+
+A separate subsystem from AI Play Mates: short, kid-friendly arcade games whose
+controller is the kid's body via webcam + MediaPipe. Games live under
+`src/app/games`, `src/components/games`, and `src/lib/games`. Each game is a
+standalone Phaser 4 scene; motion input is a per-game React hook. Auth-gated
+like the rest of the app.
+
+## Architecture (the deep module is the shared host)
+
+The one piece every game reuses is **`src/components/games/PhaserGame.tsx`** — the
+shared ancestor. It owns:
+
+- the `Phaser.Game` lifecycle (dynamic client-only import, create on mount,
+  destroy on unmount),
+- the container element (id = `config.parent`),
+- a **fullscreen / expand toggle** (browser Fullscreen API on the container;
+  Phaser `Scale.FIT` rescales the canvas to fill the screen),
+- no per-frame React re-renders during play.
+
+This is the "pull the common parts up into one component" seam: fullscreen,
+lifecycle, and the container are defined once; every game inherits them by
+rendering through `<PhaserGame>`. Do **not** re-implement these per game.
+
+```
+  React host (per game)            shared host               Phaser scene (per game)
+  ─────────────────────            ──────────               ──────────────────────
+  use<Gesture> hook  ─┐                                     scene.ts (pure Phaser)
+                      │  push flight/pose state              reads game.registry
+  <PhaserGame> ───────┼─▶ PhaserGame.tsx                     each update() frame
+   config + onReady   │   (lifecycle + fullscreen)           draws the game
+                      └─▶ game.registry.set("flight",..)   (no React re-renders)
+```
+
+## Motion input hooks (MediaPipe tasks-vision)
+
+Each game has its own hook under `src/lib/games/` that wraps a MediaPipe
+landmarker. The invariant across all hooks: **the keyboard/touch input loop is
+ALWAYS active; the camera augments but never gates play.** If the camera or
+MediaPipe CDN fails (mobile, strict networks), the game still responds to keys.
+
+| Game | Hook | MediaPipe model | What it detects |
+|---|---|---|---|
+| Jungle Blast | `usePosePunch.ts` | `PoseLandmarker` | kick / jump / run (legs + hips) |
+| Sky Strike | `useFlightYoke.ts` | `GestureRecognizer` | two fists (yoke) → bank / climb / thumb-fire |
+
+GestureRecognizer gives canned gestures out of the box (`Closed_Fist`,
+`Thumb_Up`, `Thumb_Down`, `Open_Palm`, …) plus 21 hand landmarks, so Sky Strike
+needs no custom gesture training.
+
+### Calibration gating (Sky Strike)
+
+`useFlightYoke` requires a deliberate handshake before play: both hands must
+be closed fists to "grab the yoke", which captures a baseline hand position.
+Once aligned, steering stays live while ≥1 hand is visible; if both hands
+vanish for >1s it disengages and re-calibrates. The React host renders a
+hands-overlay (✋→✊) from the hook's `handsSeen`/`fistsClosed`/`aligned`
+telemetry until alignment completes.
+
+### Fire is a deliberate pump, not a flicker
+
+Fire triggers on a **sustained thumb gesture (≥90ms) then release** — a
+deliberate "up and down". A moving fist flickers through `Thumb_Up` for <1
+frame, so the min-hold filters accidental fire during banking. Both thumb-up
+and thumb-down work; both require the release.
+
+## Sky Strike — fighter-pilot POV (2D faked perspective)
+
+`src/lib/games/sky-strike/scene.ts`. Pure 2D — no 3D, no external art:
+
+- **Rolling/pitching horizon**: a `Container` (terrain strip + clouds + sun)
+  rotates around the horizon centre on bank and translates down on climb.
+- **Procedural enemies**: a `generateTexture` plane sprite spawns small at the
+  horizon and scales up as it approaches; each has a **contrail** streak back to
+  the horizon for visibility. Reaching the cockpit = lose a life.
+- **Firing**: auto-hits the nearest bandit in range (no aiming) — so there is
+  no crosshair. Muzzle flash + explosion bursts.
+- **Sound**: synthesized live with WebAudio (square-wave laser, low-pass noise
+  explosion). **No asset files → royalty-free by construction.** To swap in real
+  SFX, drop files in `public/games/sky-strike/` and load them in `preload()`.
+- Keyboard fallback: ←/→ = bank, ↑ = climb, Space = fire.
+
+## How to add a new game (checklist)
+
+1. **Scene**: `src/lib/games/<slug>/scene.ts` — export a `Phaser.Scene` subclass
+   and a `<SLUG>_CONFIG: Phaser.Types.Core.GameConfig`. Read input from
+   `game.registry.get("<inputKey>")` each `update()`.
+2. **Motion hook** (if motion-controlled): `src/lib/games/use<Name>.ts` following
+   `usePosePunch` / `useFlightYoke` — keyboard/touch always active, camera
+   augments, expose a `get*()` ref + `setTouch()`.
+3. **React host**: `src/components/games/<Game>.tsx` — uses `use<Hook>` +
+   `<PhaserGame>` (inherits lifecycle + fullscreen). Push hook state into
+   `game.registry` each frame via a `requestAnimationFrame` loop.
+4. **Register**:
+   - `/play` hub (`src/app/play/page.tsx`) — add a card linking to
+     `/games/<slug>`.
+   - `/games` hub (`src/app/games/page.tsx`) — add to the `GAMES` array.
+   - slug page (`src/app/games/[slug]/page.tsx`) — add to `TITLES` and render
+     your host for that slug.
+5. **Assets** (optional): `public/games/<slug>/`. Prefer Kenney CC0 packs
+   (`assets/kenney_*`); confirm license before adding non-CC0 assets. Royalty-
+   free SFX can be synthesized in-scene with WebAudio (see Sky Strike) to avoid
+   any asset dependency.
+6. **Quality gates**: `pnpm tsc --noEmit` and `pnpm lint` must pass.
+
+## Games file map
+
+```
+src/
+├── app/games/
+│   ├── page.tsx                  # /games hub (GAMES array)
+│   └── [slug]/page.tsx            # renders the right host per slug (TITLES)
+├── app/play/page.tsx             # /play hub — game cards live here too
+├── components/games/
+│   ├── PhaserGame.tsx            # SHARED host: lifecycle + fullscreen (all games)
+│   ├── JungleBlastGame.tsx
+│   └── SkyStrikeGame.tsx
+└── lib/games/
+    ├── usePosePunch.ts           # PoseLandmarker (Jungle Blast)
+    ├── useFlightYoke.ts          # GestureRecognizer (Sky Strike)
+    ├── jungle-blast/scene.ts
+    └── sky-strike/scene.ts
+public/games/<slug>/              # per-game static assets (sprites, sfx)
+assets/kenney_*/                  # Kenney CC0 source packs
+```
+
+## Games conventions
+
+- **One shared host** — `PhaserGame` owns lifecycle + fullscreen + container.
+  Never duplicate these in a game component.
+- **Hooks never gate play on the camera** — keyboard/touch always work; the
+  camera augments. Surface a `error` string when the camera fails.
+- **No per-frame React re-renders** — push hook state into `game.registry` via
+  rAF; the scene reads it in `update()`.
+- **Pure-Phaser scenes** — no React inside a scene. The host is a thin adapter.
+- **Procedural first, assets second** — draw shapes / synthesize audio in-scene
+  so a game ships with zero asset deps; add Kenney CC0 art to make it pretty.
+- **Confirm licenses** — only CC0 / verified royalty-free assets; never pay or
+  pull unclear-license assets without checking with the user.

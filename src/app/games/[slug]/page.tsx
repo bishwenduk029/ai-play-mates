@@ -5,11 +5,13 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
 import { JungleBlastGame } from "@/components/games/JungleBlastGame";
+import { SkyStrikeGame } from "@/components/games/SkyStrikeGame";
 
 export const metadata = { title: "Jungle Blast · AI Play Zone" };
 
 const TITLES: Record<string, string> = {
   "jungle-blast": "Jungle Blast",
+  "sky-strike": "Sky Strike",
 };
 
 /**
@@ -48,10 +50,12 @@ export default async function GamePage({
         <div className="text-center">
           <h1 className="mb-1 text-3xl font-bold tracking-tight">{title}</h1>
           <p className="text-sm text-muted-foreground">
-            Motion-controlled — grant camera access, then punch &amp; run.
+            {slug === "sky-strike"
+              ? "Motion-controlled — grant camera access, then grab the yoke with both fists."
+              : "Motion-controlled — grant camera access, then punch & run."}
           </p>
         </div>
-        <JungleBlastGame />
+        {slug === "sky-strike" ? <SkyStrikeGame /> : <JungleBlastGame />}
       </main>
     </div>
   );
