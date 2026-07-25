@@ -81,6 +81,16 @@ export default async function PlayHubPage({
                 </CardHeader>
               </Card>
             </Link>
+            <Link href="/games/boxing-brawl">
+              <Card className="group cursor-pointer overflow-hidden transition hover:ring-2 hover:ring-primary">
+                <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-red-800 to-zinc-900 text-4xl">
+                  🥊
+                </div>
+                <CardHeader className="p-3">
+                  <CardTitle className="text-sm">Boxing Brawl</CardTitle>
+                </CardHeader>
+              </Card>
+            </Link>
             {/* Placeholder for future games */}
             <Card className="flex aspect-[4/3] items-center justify-center border-dashed opacity-50">
               <CardContent className="p-3 text-center">

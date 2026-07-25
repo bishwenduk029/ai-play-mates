@@ -24,6 +24,14 @@ const GAMES = [
     emoji: "✈️",
     tag: "MediaPipe Hands",
   },
+  {
+    slug: "boxing-brawl",
+    title: "Boxing Brawl",
+    description:
+      "POV boxing. Throw real punches at a zombie boxer — your jabs land on screen. Counter its windup to interrupt, and be the first to land 20.",
+    emoji: "🥊",
+    tag: "MediaPipe Pose",
+  },
 ] as const;
 
 /**

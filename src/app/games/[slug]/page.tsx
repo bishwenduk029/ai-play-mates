@@ -6,12 +6,14 @@ import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
 import { JungleBlastGame } from "@/components/games/JungleBlastGame";
 import { SkyStrikeGame } from "@/components/games/SkyStrikeGame";
+import { BoxingBrawlGame } from "@/components/games/BoxingBrawlGame";
 
 export const metadata = { title: "Jungle Blast · AI Play Zone" };
 
 const TITLES: Record<string, string> = {
   "jungle-blast": "Jungle Blast",
   "sky-strike": "Sky Strike",
+  "boxing-brawl": "Boxing Brawl",
 };
 
 /**
@@ -52,10 +54,12 @@ export default async function GamePage({
           <p className="text-sm text-muted-foreground">
             {slug === "sky-strike"
               ? "Motion-controlled — grant camera access, then grab the yoke with both fists."
-              : "Motion-controlled — grant camera access, then punch & run."}
+              : slug === "boxing-brawl"
+                ? "Motion-controlled — grant camera access, then throw real punches!"
+                : "Motion-controlled — grant camera access, then punch & run."}
           </p>
         </div>
-        {slug === "sky-strike" ? <SkyStrikeGame /> : <JungleBlastGame />}
+        {slug === "sky-strike" ? <SkyStrikeGame /> : slug === "boxing-brawl" ? <BoxingBrawlGame /> : <JungleBlastGame />}
       </main>
     </div>
   );
