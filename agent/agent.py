@@ -35,7 +35,7 @@ from livekit.agents import (
     get_job_context,
 )
 from livekit.plugins import google
-from livekit.plugins.google.beta.realtime import RealtimeModel
+from livekit.plugins.google.realtime import RealtimeModel
 
 load_dotenv(".env.local")
 
