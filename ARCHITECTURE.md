@@ -294,8 +294,7 @@ and thumb-down work; both require the release.
    `game.registry` each frame via a `requestAnimationFrame` loop.
 4. **Register**:
    - `/play` hub (`src/app/play/page.tsx`) — add a card linking to
-     `/games/<slug>`.
-   - `/games` hub (`src/app/games/page.tsx`) — add to the `GAMES` array.
+     `/games/<slug>`. (`/play` is the only hub — there is no `/games` hub.)
    - slug page (`src/app/games/[slug]/page.tsx`) — add to `TITLES` and render
      your host for that slug.
 5. **Assets** (optional): `public/games/<slug>/`. Prefer Kenney CC0 packs
@@ -309,9 +308,8 @@ and thumb-down work; both require the release.
 ```
 src/
 ├── app/games/
-│   ├── page.tsx                  # /games hub (GAMES array)
 │   └── [slug]/page.tsx            # renders the right host per slug (TITLES)
-├── app/play/page.tsx             # /play hub — game cards live here too
+├── app/play/page.tsx             # /play hub — the only games hub (game cards)
 ├── components/games/
 │   ├── PhaserGame.tsx            # SHARED host: lifecycle + fullscreen (all games)
 │   ├── JungleBlastGame.tsx

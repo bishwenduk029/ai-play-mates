@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # AI Play Zone — Engineering Guide
 
-> A platform where **AI and games intersect into amazing experiences at low cost**. Motion-controlled arcade games a kid plays with their body via webcam. New games ship regularly — **1–2 new games every Saturday**.
+> A platform where **AI and games intersect into amazing experiences at low cost**. Motion-controlled arcade games a kid plays with their body via webcam. New games ship regularly — **1–2 new games every Saturday**. Your objective is to build this amazing web project so that it goes viral and becomes a self earning engine.
 
 Read this file, then `ARCHITECTURE.md`, before writing any code.
 
@@ -33,7 +33,7 @@ Read this file, then `ARCHITECTURE.md`, before writing any code.
   - Use **deliberate gestures** to avoid false positives (e.g. fire on a sustained thumb-then-release, not a 1-frame flicker) — moving fists must not trigger fire.
   - Calibration gating (e.g. both fists = "grab the yoke") is fine; auto-align when the camera is off/failed.
 - **Data flow**: hook → React state → `game.registry.set("<key>", ...)` each `requestAnimationFrame`; the scene reads it in `update()`. **No per-frame React re-renders.**
-- **Register** a new game in three places: `/play` hub (`src/app/play/page.tsx`), `/games` hub (`src/app/games/page.tsx` `GAMES`), and the slug page (`src/app/games/[slug]/page.tsx` `TITLES` + render the host). Full checklist in `ARCHITECTURE.md`.
+- **Register** a new game in two places: the `/play` hub (`src/app/play/page.tsx`) and the slug page (`src/app/games/[slug]/page.tsx` `TITLES` + render the host). Full checklist in `ARCHITECTURE.md`. (There is no `/games` hub — `/play` is the only hub.)
 
 ## Assets & sound
 
@@ -45,9 +45,30 @@ Read this file, then `ARCHITECTURE.md`, before writing any code.
 
 ## Sub-agents & delegation
 
-- You're running as **`pi`** (model `z-ai/glm-5.2` via openrouter).
-- If you delegate to sub-agents via **Herdr** (`.agents/skills/herdr/SKILL.md`), pin the model: spawn with `pi --provider openrouter --model z-ai/glm-5.2`. **Only `glm-5.2` — no other model.**
-- **Prefer doing the work yourself.** The user prefers fewer sub-agents; delegate only when work is genuinely parallel and independent.
+Sub-agents run as **opencode sessions in Herdr panes** (`.agents/skills/herdr/SKILL.md`), with the model pinned per task difficulty. **Only these two models — never openrouter, never pi:**
+
+| Task difficulty | Model | Launch command | Use for |
+|---|---|---|---|
+| Simple / mechanical | `opencode-go/glm-5.2` | `opencode --model opencode-go/glm-5.2` | Localized edits: tweak one scene, redraw a texture, adjust copy, responsive class pass |
+| Hard / very hard | `opencode-go/kimi-k3` | `opencode --model opencode-go/kimi-k3` | Design patterns, reusable/deep modules (e.g. the `PhaserGame` shared host), new game architecture, refactors across files |
+
+### Delegation workflow (proven)
+
+1. **Split work into disjoint file sets** — each sub-agent must own files no other agent (or you) will touch, so parallel edits never conflict.
+2. Split a pane per agent (wide pane → `--direction right`, else `down`), keep the user's focus:
+   ```bash
+   herdr pane split --current --direction right --no-focus --cwd "$(pwd)"
+   herdr pane rename <paneId> "<task>-agent"
+   herdr pane run <paneId> "opencode --model opencode-go/glm-5.2"   # or kimi-k3
+   ```
+3. Wait for the TUI to open (`herdr wait agent-status <paneId> --status idle`), then submit the task with `herdr pane run <paneId> "<prompt>"`.
+4. **Prompts must be fully self-contained** (fresh context): exact file paths, current behavior, numbered implementation steps, and constraints — *edit ONLY these files, no git, no `pnpm dev`/`install`/`tsc`/`lint`* (the orchestrator runs the quality gates).
+5. Wait for `working` → `idle`/`done`, read the transcript (`herdr pane read <paneId> --source recent-unwrapped --lines 80`), then **verify every diff yourself** and run `pnpm tsc --noEmit` + `pnpm lint` yourself.
+
+### Gotchas
+
+- **glm-5.2 stalls after reading**: it sometimes reads the target file, prints "let me design the changes…", and goes idle without editing. Nudge it: `herdr pane run <paneId> "Continue — make the edits now, then reply with a summary."`
+- **Prefer doing small single-file edits yourself** — delegate only when work is genuinely parallel and independent (the user prefers fewer sub-agents).
 - To let the user test, start a **dev server in its own Herdr pane** (see Dev workflow) rather than running it inline.
 
 ## Dev workflow

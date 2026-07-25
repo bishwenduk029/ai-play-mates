@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { JungleBlastGame } from "@/components/games/JungleBlastGame";
 import { SkyStrikeGame } from "@/components/games/SkyStrikeGame";
 import { BoxingBrawlGame } from "@/components/games/BoxingBrawlGame";
+import { Logo } from "@/components/Logo";
 
 export const metadata = { title: "Jungle Blast · AI Play Zone" };
 
@@ -34,23 +35,23 @@ export default async function GamePage({
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
-          <Link href="/games" className="flex items-center gap-2 font-semibold">
-            <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <span className="text-xs font-bold">PZ</span>
-            </div>
-            AI Play Zone
+      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/80 text-white backdrop-blur supports-[backdrop-filter]:bg-black/60">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="text-white">
+            <Logo />
           </Link>
-          <Link href="/games">
-            <Button size="sm" variant="ghost">← All games</Button>
+          <Link href="/play">
+            <Button size="sm" variant="ghost" className="h-9 min-h-9 text-white/70 hover:text-white hover:bg-white/10 sm:h-auto sm:min-h-0">
+              <span className="sm:hidden">← Play</span>
+              <span className="hidden sm:inline">← Back to Play</span>
+            </Button>
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center gap-6 px-6 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center gap-6 px-4 py-8 sm:px-6 sm:py-10">
         <div className="text-center">
-          <h1 className="mb-1 text-3xl font-bold tracking-tight">{title}</h1>
+          <h1 className="mb-1 text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
           <p className="text-sm text-muted-foreground">
             {slug === "sky-strike"
               ? "Motion-controlled — grant camera access, then grab the yoke with both fists."

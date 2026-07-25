@@ -319,9 +319,11 @@ export function useFlightYoke(enabled: boolean) {
         const avgX = xs.reduce((a, b) => a + b, 0) / xs.length;
         const avgY = ys.reduce((a, b) => a + b, 0) / ys.length;
 
-        // Mirrored selfie: user moves hands right → avgX increases in screen
-        // space (since the video is drawn mirrored). Bank follows that.
-        let dx = avgX - baselineXRef.current;
+        // The video element is hidden and raw front-camera frames are NOT
+        // mirrored: when the kid moves their hands to THEIR left, the hands
+        // appear on the right side of the image and avgX INCREASES. Negate
+        // the displacement so body-left → plane-left (natural mirror feel).
+        let dx = -(avgX - baselineXRef.current);
         if (Math.abs(dx) < BANK_DEADZONE) dx = 0;
         bank = Math.max(-1, Math.min(1, dx / BANK_RANGE));
 

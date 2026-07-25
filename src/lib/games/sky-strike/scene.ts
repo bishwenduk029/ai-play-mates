@@ -43,6 +43,17 @@ const NOSE_HIT_RADIUS = 80; // px — fire hits a bandit within this of the nose
 const CLIMB_DODGE = 0.45; // climb >= this flies OVER a bandit at the cockpit
 const SPAWN_MIN_MS = 1200;
 const SPAWN_MAX_MS = 2400;
+// Gentle start: long opening gap + breathing room before the first bandit so
+// new pilots can learn to aim and shoot before being swarmed.
+const SPAWN_START_MS = 4000; // long opening gap (fades into the difficulty curve)
+const FIRST_SPAWN_DELAY_MS = 1500; // pause after alignment before the first bandit
+const EARLY_SPAWN_HOLD_SEC = 15; // span over which the opening-gap bonus fades out
+const ENEMY_CAP_START = 2; // max concurrent bandits in the opening
+const ENEMY_CAP_GRACE_SEC = 15; // hold the opening cap for this long
+const ENEMY_CAP_RAMP_SEC = 10; // after grace, +1 to the cap every this many seconds
+const ENEMY_CAP_END = 5; // ceiling for the concurrent-bandit cap
+const ENEMY_SPEED_RAMP_SEC = 45; // early bandits are slow; reach full speed by this time
+const ENEMY_SPEED_START_FACTOR = 0.6; // multiply random speed range at t=0, → 1.0 at ramp end
 const FIRE_COOLDOWN_MS = 350;
 const LIVES = 3;
 
@@ -115,7 +126,8 @@ export class SkyStrikeScene extends Phaser.Scene {
     this.gameOverGroup = [];
     this.score = 0;
     this.lives = LIVES;
-    this.nextSpawnAt = 0;
+    // Delay the first spawn after alignment so the pilot has breathing room.
+    this.nextSpawnAt = FIRST_SPAWN_DELAY_MS / 1000;
     this.elapsed = 0;
     this.gameOver = false;
     this.lastFireAt = 0;
@@ -330,12 +342,23 @@ export class SkyStrikeScene extends Phaser.Scene {
 
     this.elapsed += delta;
 
-    // --- Spawning ---
-    if (this.elapsed >= this.nextSpawnAt) {
+    // --- Spawning (gentle ramp: long opening gap → difficulty curve, capped) ---
+    const aliveCount = this.enemies.filter((e) => e.alive).length;
+    const cap = this.enemyCap();
+    if (this.elapsed >= this.nextSpawnAt && aliveCount < cap) {
       this.spawnEnemy();
       const difficulty = Math.min(1, this.elapsed / 50);
-      const gap = SPAWN_MAX_MS - (SPAWN_MAX_MS - SPAWN_MIN_MS) * difficulty;
+      // Difficulty curve alone spans SPAWN_MAX_MS → SPAWN_MIN_MS.
+      const baseGap = SPAWN_MAX_MS - (SPAWN_MAX_MS - SPAWN_MIN_MS) * difficulty;
+      // Opening bonus stretches the gap up to SPAWN_START_MS, fading over the
+      // hold window so early play stays calm before handing off to the curve.
+      const earlyBonus =
+        (SPAWN_START_MS - SPAWN_MAX_MS) * Math.max(0, 1 - this.elapsed / EARLY_SPAWN_HOLD_SEC);
+      const gap = baseGap + earlyBonus;
       this.nextSpawnAt = this.elapsed + gap / 1000;
+    } else if (this.elapsed >= this.nextSpawnAt && aliveCount >= cap) {
+      // At the cap — retry shortly so a freed slot fills promptly.
+      this.nextSpawnAt = this.elapsed + 0.2;
     }
 
     // --- Enemies approach (scale up + move toward viewer) ---
@@ -388,13 +411,25 @@ export class SkyStrikeScene extends Phaser.Scene {
     this.horizonContainer.y = HORIZON_Y + this.pitch;
   }
 
+  /** Max concurrent bandits the sky can hold right now (ramps up over time). */
+  private enemyCap(): number {
+    if (this.elapsed < ENEMY_CAP_GRACE_SEC) return ENEMY_CAP_START;
+    const steps = Math.floor((this.elapsed - ENEMY_CAP_GRACE_SEC) / ENEMY_CAP_RAMP_SEC) + 1;
+    return Math.min(ENEMY_CAP_END, ENEMY_CAP_START + steps);
+  }
+
   private spawnEnemy() {
     const cx = this.scale.width / 2;
     const trail = this.add.graphics();
     trail.setDepth(9);
     const go = this.add.image(cx, HORIZON_Y, "enemy-plane");
     go.setOrigin(0.5, 0.5).setDepth(10).setScale(ENEMY_START_SCALE).setAlpha(0);
-    const speed = ENEMY_MIN_SPEED + Math.random() * (ENEMY_MAX_SPEED - ENEMY_MIN_SPEED);
+    // Early bandits are slow (factor starts ~0.6, reaches 1.0 by the speed-ramp
+    // window) so new pilots have time to line up shots before things get busy.
+    const ramp = Math.min(1, this.elapsed / ENEMY_SPEED_RAMP_SEC);
+    const factor = ENEMY_SPEED_START_FACTOR + (1 - ENEMY_SPEED_START_FACTOR) * ramp;
+    const speed =
+      (ENEMY_MIN_SPEED + Math.random() * (ENEMY_MAX_SPEED - ENEMY_MIN_SPEED)) * factor;
     // Each bandit picks a lane across the view; the player must bank to aim at it.
     const drift = (Math.random() * 2 - 1) * (this.scale.width * 0.33);
     this.enemies.push({ go, trail, scale: ENEMY_START_SCALE, speed, drift, alive: true });

@@ -48,16 +48,29 @@ export function SubscriptionButton({ size = "sm" }: { size?: "sm" | "lg" }) {
   if (premium) {
     return (
       <a href="/api/customer-portal">
-        <Button variant="ghost" size={size}>
-          Manage subscription
+        <Button variant="ghost" size={size} className="h-9 min-h-9 sm:h-auto sm:min-h-0">
+          <span aria-hidden className="sm:hidden">Manage</span>
+          <span className="hidden sm:inline">Manage subscription</span>
         </Button>
       </a>
     );
   }
 
   return (
-    <Button size={size} onClick={startCheckout} disabled={loading}>
-      {loading ? "Redirecting…" : "Upgrade · $1/mo"}
+    <Button
+      size={size}
+      onClick={startCheckout}
+      disabled={loading}
+      className="h-9 min-h-9 sm:h-auto sm:min-h-0"
+    >
+      {loading ? (
+        <span>…</span>
+      ) : (
+        <>
+          <span className="sm:hidden">Upgrade</span>
+          <span className="hidden sm:inline">Upgrade · $1/mo</span>
+        </>
+      )}
     </Button>
   );
 }

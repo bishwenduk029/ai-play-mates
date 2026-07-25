@@ -193,7 +193,8 @@ export class BoxingBrawlScene extends Phaser.Scene {
     const fromX = side === "L" ? GAME_W * 0.2 : GAME_W * 0.8;
     const fromY = GAME_H + 80;
     const glove = this.add.image(fromX, fromY, "player-glove");
-    glove.setDepth(40).setScale(0.5).setAngle(side === "L" ? -15 : 15);
+    // Side-profile glove points RIGHT by default; mirror it for the L arm.
+    glove.setDepth(40).setScale(0.9).setFlipX(side === "L");
     const targetX = OPP_X + (side === "L" ? -20 : 20);
     const targetY = OPP_Y - 120;
 
@@ -203,7 +204,7 @@ export class BoxingBrawlScene extends Phaser.Scene {
       targets: glove,
       x: targetX,
       y: targetY,
-      scale: 1.1,
+      scale: 1.6,
       duration: 130,
       ease: "Quad.out",
       onComplete: () => {
@@ -224,7 +225,7 @@ export class BoxingBrawlScene extends Phaser.Scene {
         this.tweens.add({
           targets: glove,
           y: GAME_H + 80,
-          scale: 0.4,
+          scale: 0.6,
           alpha: 0,
           duration: 160,
           ease: "Quad.in",
@@ -241,11 +242,11 @@ export class BoxingBrawlScene extends Phaser.Scene {
   // --- Opponent's windup completes: glove flies at the camera ---
   private opponentPunchLands() {
     const glove = this.add.image(OPP_X, OPP_Y - 110, "opp-glove");
-    glove.setDepth(45).setScale(0.6);
+    glove.setDepth(45).setScale(0.8);
     this.tweens.add({
       targets: glove,
       y: GAME_H / 2,
-      scale: 3.2,
+      scale: 3.0,
       duration: 260,
       ease: "Quad.in",
       onComplete: () => {
@@ -367,38 +368,136 @@ export class BoxingBrawlScene extends Phaser.Scene {
     this.ropes.fillRect(postL - 6, 60, 12, 90);
     this.ropes.fillRect(postR - 6, 60, 12, 90);
 
-    // --- Procedural glove textures ---
+    // --- Procedural glove textures (side-profile player, front-facing opp) ---
     if (!this.textures.exists("player-glove")) {
-      const g = this.make.graphics({ x: 0, y: 0 });
-      // Red boxing glove, fist shape.
-      g.fillStyle(C.gloveDark, 1);
-      g.fillCircle(26, 30, 22); // main body
-      g.fillStyle(C.glove, 1);
-      g.fillCircle(26, 28, 20);
-      // Thumb knot.
-      g.fillStyle(C.gloveDark, 1);
-      g.fillCircle(44, 34, 8);
-      g.fillStyle(C.glove, 1);
-      g.fillCircle(44, 33, 7);
-      // Cuff.
-      g.fillStyle(C.gloveDark, 1);
-      g.fillRect(12, 44, 28, 12);
-      g.generateTexture("player-glove", 60, 60);
+      this.makePlayerGloveTexture();
     }
     if (!this.textures.exists("opp-glove")) {
-      const g = this.make.graphics({ x: 0, y: 0 });
-      g.fillStyle(0x111111, 1);
-      g.fillCircle(26, 30, 22);
-      g.fillStyle(C.oppGlove, 1);
-      g.fillCircle(26, 28, 20);
-      g.fillStyle(0x111111, 1);
-      g.fillCircle(44, 34, 8);
-      g.fillStyle(C.oppGlove, 1);
-      g.fillCircle(44, 33, 7);
-      g.fillStyle(0x111111, 1);
-      g.fillRect(12, 44, 28, 12);
-      g.generateTexture("opp-glove", 60, 60);
+      this.makeOppGloveTexture();
     }
+  }
+
+  // Player glove — side-profile boxing glove pointing RIGHT (knuckles on the
+  // right edge, wrist cuff at the left). Canvas ~120x80. Red palette.
+  private makePlayerGloveTexture() {
+    const g = this.make.graphics({ x: 0, y: 0 });
+    const W = 120;
+    const H = 80;
+
+    // --- Wrist cuff (left) ---
+    g.fillStyle(C.gloveDark, 1);
+    g.fillRoundedRect(2, 22, 26, 36, 6);
+    g.fillStyle(C.glove, 1);
+    g.fillRoundedRect(5, 25, 20, 30, 4);
+    // Lace lines across the cuff seam (horizontal short stitches).
+    g.lineStyle(2, C.gloveDark, 1);
+    for (let i = 0; i < 5; i++) {
+      const ly = 28 + i * 6;
+      g.beginPath();
+      g.moveTo(7, ly);
+      g.lineTo(23, ly);
+      g.strokePath();
+    }
+    // Vertical lace crossbar just inside the cuff.
+    g.lineStyle(2, C.gloveDark, 1);
+    g.beginPath();
+    g.moveTo(15, 28);
+    g.lineTo(15, 52);
+    g.strokePath();
+
+    // --- Fist body (big rounded blob, centered ~ (68, 36)) ---
+    // Dark base / shadow (offset down-right for depth).
+    g.fillStyle(C.gloveDark, 1);
+    g.fillRoundedRect(24, 12, 84, 56, 26);
+    g.fillCircle(106, 40, 22); // round front
+    // Main red body, offset up-left for a shaded 3D read.
+    g.fillStyle(C.glove, 1);
+    g.fillRoundedRect(24, 10, 80, 52, 24);
+    g.fillCircle(104, 36, 20);
+    // Top highlight band (lighter red) for specular pop.
+    g.fillStyle(0xe74c3c, 0.45);
+    g.fillRoundedRect(32, 14, 50, 16, 10);
+
+    // --- 4 knuckle bumps along the front (right) edge ---
+    for (let i = 0; i < 4; i++) {
+      const ky = 20 + i * 13;
+      g.fillStyle(C.gloveDark, 1);
+      g.fillCircle(108, ky + 1, 7);
+      g.fillStyle(C.glove, 1);
+      g.fillCircle(108, ky, 6);
+      // tiny highlight on each knuckle
+      g.fillStyle(0xff6b5e, 0.6);
+      g.fillCircle(107, ky - 2, 2);
+    }
+
+    // --- Thumb lobe underneath (bottom-right curve) ---
+    g.fillStyle(C.gloveDark, 1);
+    g.fillCircle(90, 66, 12);
+    g.fillStyle(C.glove, 1);
+    g.fillCircle(89, 65, 10);
+    g.fillStyle(0xff6b5e, 0.4);
+    g.fillCircle(86, 62, 2);
+
+    g.generateTexture("player-glove", W, H);
+    g.destroy();
+  }
+
+  // Opponent glove — FRONT-facing fist that flies at the camera (body wider
+  // than tall, knuckles along the top, thumb on one side, cuff at the
+  // bottom). Dark zombie palette. Canvas ~120x130.
+  private makeOppGloveTexture() {
+    const g = this.make.graphics({ x: 0, y: 0 });
+    const W = 120;
+    const H = 130;
+
+    // --- Cuff at the bottom ---
+    g.fillStyle(0x050505, 1);
+    g.fillRoundedRect(36, 96, 48, 32, 7);
+    g.fillStyle(C.oppGlove, 1);
+    g.fillRoundedRect(39, 99, 42, 26, 5);
+    // Cuff seam line.
+    g.lineStyle(2, 0x050505, 1);
+    g.beginPath();
+    g.moveTo(40, 108);
+    g.lineTo(80, 108);
+    g.strokePath();
+
+    // --- Fist body (wider than tall) ---
+    // Dark shadow base.
+    g.fillStyle(0x050505, 1);
+    g.fillRoundedRect(10, 22, 100, 78, 30);
+    // Main zombie-gray body (slightly up/inset for depth).
+    g.fillStyle(C.oppGlove, 1);
+    g.fillRoundedRect(12, 18, 96, 74, 28);
+    // Inner palm hollow — darker patch low-center.
+    g.fillStyle(0x181818, 1);
+    g.fillRoundedRect(32, 56, 56, 30, 14);
+    // Sickly zombie-green bruise accent on the body.
+    g.fillStyle(0x33592a, 0.35);
+    g.fillCircle(60, 70, 18);
+
+    // --- 4 finger/knuckle bumps along the top edge ---
+    for (let i = 0; i < 4; i++) {
+      const kx = 28 + i * 21;
+      g.fillStyle(0x050505, 1);
+      g.fillCircle(kx, 20, 11);
+      g.fillStyle(C.oppGlove, 1);
+      g.fillCircle(kx, 19, 9);
+      // putrid nail cap (zombie detail).
+      g.fillStyle(0x2a3a20, 0.8);
+      g.fillCircle(kx, 14, 3);
+    }
+
+    // --- Thumb lobe on the right side ---
+    g.fillStyle(0x050505, 1);
+    g.fillCircle(110, 58, 14);
+    g.fillStyle(C.oppGlove, 1);
+    g.fillCircle(108, 56, 12);
+    g.fillStyle(0x2a3a20, 0.7);
+    g.fillCircle(112, 52, 3);
+
+    g.generateTexture("opp-glove", W, H);
+    g.destroy();
   }
 
   private spawnImpact(x: number, y: number, color: number) {

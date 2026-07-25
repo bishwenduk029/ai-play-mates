@@ -9,7 +9,7 @@ export function SignOutButton() {
       variant="ghost"
       size="sm"
       onClick={() => authClient.signOut().then(() => (window.location.href = "/login"))}
-      className="pointer-events-auto text-muted-foreground hover:text-foreground"
+      className="pointer-events-auto h-9 min-h-9 text-muted-foreground hover:text-foreground sm:h-auto sm:min-h-0"
     >
       Sign out
     </Button>
